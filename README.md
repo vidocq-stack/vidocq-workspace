@@ -59,7 +59,7 @@ for the mani use cases, the worktree workflow, git hooks, and IntelliJ setup.
 ### Subagents (`.claude/agents/`)
 | Agent | Role |
 |-------|------|
-| `jpms-guardian` | Audits `module-info.java` — minimal exports, no unjustified opens, no automatic-module fallback, no split-packages |
+| `java-modules-guardian` | Audits `module-info.java` — minimal exports, no unjustified opens, no automatic-module fallback, no split-packages |
 | `classfile-codegen` | Class-File API (JEP 484) + APT codegen, replacing runtime reflection |
 | `tck-runner` | Runs and triages the official Jakarta TCKs (out-of-reactor runners) |
 | `virtual-threads-reviewer` | Reviews concurrency for virtual-thread-first design (no pinning, no platform pools) |

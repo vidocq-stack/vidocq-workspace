@@ -31,7 +31,7 @@ This workspace is managed with **mani** (`mani.yaml`): each project is cloned as
 
 ## Terminology
 
-Use **Java Modules** (or **Java module** for a single module) when referring to the Java Platform Module System. Do **not** use the abbreviation **JPMS** — in prose, identifiers, or documentation. In code identifiers, where a spaced term is impossible, use `module` (e.g. a module-path integration test is `*-module-it`, package `…moduleit`). Exception: the `jpms-guardian` agent name stays unchanged until it is renamed at its source.
+Use **Java Modules** (or **Java module** for a single module) when referring to the Java Platform Module System. Do **not** use the abbreviation **JPMS** — in prose, identifiers, or documentation. In code identifiers, where a spaced term is impossible, use `module` (e.g. a module-path integration test is `*-module-it`, package `…moduleit`).
 
 ## Vidocq ecosystem philosophy
 
@@ -85,7 +85,7 @@ Specific TCK scripts (run from the sub-project root, never from this workspace):
 
 Defined in `.claude/agents/` and `.claude/skills/` — use proactively when the context is suitable:
 
-- Agents: `jpms-guardian` (`module-info.java` audit), `classfile-codegen` (Class-File API + APT), `tck-runner` (out-of-reactor Jakarta TCK), `virtual-threads-reviewer` (concurrency review), `dependency-gatekeeper` (zero-dep `pom.xml` review).
+- Agents: `java-modules-guardian` (`module-info.java` audit), `classfile-codegen` (Class-File API + APT), `tck-runner` (out-of-reactor Jakarta TCK), `virtual-threads-reviewer` (concurrency review), `dependency-gatekeeper` (zero-dep `pom.xml` review).
 - Skills: `/log-bug` (adds an entry to `<sub-project>/BUG.md`), `/log-bench` (adds an entry to `<sub-project>/BENCH.md`).
 
 ## Per-sub-project guides
