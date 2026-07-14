@@ -18,7 +18,7 @@ this repo only ever tracks the shared Claude config.
 │   ├── agents/              ← shared subagents (audit / codegen / TCK / concurrency / deps)
 │   ├── skills/              ← shared slash-skills (/log-bug, /log-bench)
 │   └── settings.json        ← SHARED, portable Claude Code settings (reviewed as team config)
-├── CLAUDE.md                ← workspace conventions (commit rules, JPMS/codegen/zero-dep, TDD, …)
+├── CLAUDE.md                ← workspace conventions (commit rules, Java Modules/codegen/zero-dep, TDD, …)
 ├── .gitignore               ← ignores the nested project clones + local/secret files
 ├── README.md
 │
@@ -60,7 +60,7 @@ submodules.
 - `/log-bench` — append a benchmark run to the current sub-project's `BENCH.md`
 
 ### Conventions (`CLAUDE.md`)
-The workspace-wide rules: signed-off/no-AI-mention commits, strict JPMS,
+The workspace-wide rules: signed-off/no-AI-mention commits, strict Java Modules,
 compile-time codegen over reflection, zero/minimal dependencies, TDD, virtual
 threads for I/O, English for code/docs, and the `BUG.md` / `BENCH.md`
 traceability policy. Each sub-project additionally ships its own `CLAUDE.md`.
