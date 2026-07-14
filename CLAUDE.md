@@ -23,6 +23,7 @@ This workspace is managed with **mani** (`mani.yaml`): each project is cloned as
 
 ## Commit conventions
 
+- **DCO sign-off** — every commit must carry a `Signed-off-by` trailer (`git commit -s`); the shared `.githooks` auto-append and enforce it.
 - **Author and committer: the human alone.** An AI is not an author (Thaler v. Perlmutter, 2026).
 - **AI assistance recorded via `Co-Authored-By:`** naming the tool (e.g. `Co-Authored-By: Claude Opus 4.x <noreply@anthropic.com>`) on the commits it helped produce. This is a **provenance record, not a claim of legal co-authorship**. Reference rule: `AI-POLICY.md`, which prevails in case of doubt.
 - **Commit messages in English**, like the code, the CI and team exchanges.

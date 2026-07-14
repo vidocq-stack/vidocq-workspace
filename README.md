@@ -70,7 +70,7 @@ for the mani use cases, the worktree workflow, git hooks, and IntelliJ setup.
 - `/log-bench` — append a benchmark run to the current sub-project's `BENCH.md`
 
 ### Conventions (`CLAUDE.md`)
-The workspace-wide rules: signed-off/no-AI-mention commits, strict Java Modules,
+The workspace-wide rules: signed-off (DCO) commits, strict Java Modules,
 compile-time codegen over reflection, zero/minimal dependencies, TDD, virtual
 threads for I/O, English for code/docs, and the `BUG.md` / `BENCH.md`
 traceability policy. Each sub-project additionally ships its own `CLAUDE.md`.
