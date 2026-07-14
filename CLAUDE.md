@@ -4,49 +4,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository nature
 
-This directory is a **workspace** grouping some fifteen independent Maven projects — there is **no root POM**, **no root `mvnw`**, and **no unified reactor**. Each sub-project has its own reactor, its own `.sdkmanrc`, its own `mvnw`, and most have their own `CLAUDE.md` to consult first when working inside them.
+This directory is a **workspace** grouping the independent Maven projects of the Vidocq ecosystem — there is **no root POM**, **no root `mvnw`**, and **no unified reactor**. Each sub-project has its own reactor, its own `.sdkmanrc`, its own `mvnw`, and most have their own `CLAUDE.md` to consult first when working inside them.
 
-**Foundational building blocks** (no dependencies between them):
+The ecosystem spans several groups of repositories:
 
-```
-chappe/        Pure Java 25 HTTP/1.1 + HTTP/2 server, zero dependencies — transport layer
-vauban/        CDI 4.1 Lite container, Java Modules native, zero dependencies — DI
-champollion/   Jakarta JSON-P 2.1 + JSON-B 3.0 implementation, zero dependencies
-```
+- **Foundational bricks** (no dependencies between them): `chappe` (pure Java 25 HTTP/1.1 + HTTP/2 server — transport), `vauban` (CDI 4.1 Lite container, Java Modules native — DI), `champollion` (Jakarta JSON-P 2.1 + JSON-B 3.0).
+- **Jakarta EE layers** (compose the bricks): `foy` (Servlet 6.1 — transport via chappe, CDI via vauban), `cassini` (REST 4.0 / JAX-RS), `mansart` (Jakarta Data 1.0 + Persistence 3.2 — JDBC pool and transactions).
+- **MicroProfile bricks:** `ravel` (Config 3.1), `knock` (Health 4.0), `dirac` (Metrics 5.1), `heisenberg` (Fault Tolerance 4.1), `cervantes` (JWT 2.1), `cyrano` (REST Client 4.0), `humboldt` (Telemetry 2.1), `grimm` (OpenAPI 4.1).
+- **Runtime & support:** `vidocq` (the runtime — orchestrator, extension mechanism, packaging), `vidocq-parent` (shared parent POM), `vidocq-docs` (Antora docs site, FR/EN), `ci` (CI configuration & pipelines), `GestionProjet` (inverted dependency graph + multi-repo impact scripts).
 
-**Jakarta EE implementations** (compose the foundational building blocks):
+Logical dependency graph: the foundational bricks (`chappe` + `vauban` + `champollion`) have no dependencies between them; `foy`, `cassini` and `mansart` compose them; the MicroProfile bricks build on `vauban` (CDI) and, depending on the case, on `cassini` or `chappe`; and `vidocq` orchestrates the whole via an extension SPI inspired by Quarkus and carries the MicroProfile 7.1 certification of the assembled runtime.
 
-```
-foy/           Jakarta Servlet 6.1 (transport via chappe, CDI via vauban)
-cassini/       Jakarta REST 4.0 / JAX-RS (transport via chappe, CDI via vauban)
-mansart/       Jakarta Data 1.0 + Jakarta Persistence 3.2, JDBC pool and transactions
-```
-
-**MicroProfile implementations**:
-
-```
-ravel/         MicroProfile Config 3.1
-cervantes/     MicroProfile JWT 2.1
-knock/         MicroProfile Health 4.0
-dirac/         MicroProfile Metrics 5.1
-heisenberg/    MicroProfile Fault Tolerance 4.1
-humboldt/      MicroProfile Telemetry 2.1
-cyrano/        MicroProfile Rest Client 4.0
-grimm/         MicroProfile OpenAPI 4.1
-```
-
-**Assembly and tooling**:
-
-```
-vidocq/           Vidocq Runtime — orchestrator, extension mechanism, packaging
-vidocq-parent/    Shared parent POM (versions, plugins, profiles)
-ci/               Shared Forgejo Actions workflows
-GestionProjet/    Inverted dependency graph + multi-repo impact scripts
-```
-
-Logical dependency graph: `chappe` + `vauban` + `champollion` are the foundational building blocks. `foy`, `cassini` and `mansart` compose them. The MicroProfile implementations build on `vauban` (CDI) and, depending on the case, on `cassini` or `chappe`. `vidocq` orchestrates the whole via an extension SPI inspired by Quarkus and carries the MicroProfile 7.1 certification of the assembled runtime.
-
-**Multi-repo impact**: before modifying a foundational building block, check its consumers via `GestionProjet/graph/inverted.json` — a change in `vauban` ripples through almost the entire workspace.
+**Multi-repo impact**: before modifying a foundational brick, check its consumers via `GestionProjet/graph/inverted.json` — a change in `vauban` ripples through almost the entire workspace.
 
 ## Workspace orchestration
 
