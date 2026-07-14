@@ -48,7 +48,7 @@ Boucle : capturer la baseline verte (Spring) → migrer une brique → re-jouer 
 | CDI | **Vauban** | `vauban-indexer` (APT) |
 | Driver H2 modularisé | — | `vidocq-runtime-h2-jpms-repackaged` |
 
-Charte à respecter : **JPMS strict**, **zéro dépendance externe** (pas de Spring/Hibernate/Jackson),
+Charte à respecter : **Java Modules stricts**, **zéro dépendance externe** (pas de Spring/Hibernate/Jackson),
 **codegen statique APT** (jamais de réflexion runtime), **Virtual Threads**, **code/commentaires en
 anglais**.
 
@@ -257,7 +257,7 @@ laisser tomber `combine.children` (plus rien à fusionner) :
 
 ---
 
-## 4. `module-info.java` cible (JPMS)
+## 4. `module-info.java` cible (Java Modules)
 
 ```java
 module com.example.petstore {
@@ -362,7 +362,7 @@ vidocq.pool.acquireTimeout=PT5S
 
 ## 8. Pièges à connaître (sinon ça casse en prod / module-path)
 
-- **`opens` JPMS** : sans `opens com.example.petstore;` (resources + entités) et `opens …model;`
+- **`opens` Java Modules** : sans `opens com.example.petstore;` (resources + entités) et `opens …model;`
   (DTO JSON-B), tout marche en classpath mais **casse en module-path** (réflexion JAX-RS/Mansart/JSON-B).
 - **`@Inject Instance<DataSource>`** : le `DataSource` est fourni par `mansart-pool` **à runtime**,
   invisible de l'index CDI compile-time. L'injecter **directement** fait rejeter le bean par l'APT

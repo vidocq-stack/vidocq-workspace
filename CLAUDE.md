@@ -10,7 +10,7 @@ This directory is a **workspace** grouping some fifteen independent Maven projec
 
 ```
 chappe/        Pure Java 25 HTTP/1.1 + HTTP/2 server, zero dependencies — transport layer
-vauban/        CDI 4.1 Lite container, JPMS native, zero dependencies — DI
+vauban/        CDI 4.1 Lite container, Java Modules native, zero dependencies — DI
 champollion/   Jakarta JSON-P 2.1 + JSON-B 3.0 implementation, zero dependencies
 ```
 
@@ -55,11 +55,15 @@ Logical dependency graph: `chappe` + `vauban` + `champollion` are the foundation
 - **Commit messages in English**, like the code, the CI and team exchanges.
 - This convention applies to all sub-projects of the workspace.
 
+## Terminology
+
+Use **Java Modules** (or **Java module** for a single module) when referring to the Java Platform Module System. Do **not** use the abbreviation **JPMS** — in prose, identifiers, or documentation. In code identifiers, where a spaced term is impossible, use `module` (e.g. a module-path integration test is `*-module-it`, package `…moduleit`). Exception: the `jpms-guardian` agent name stays unchanged until it is renamed at its source.
+
 ## Vidocq ecosystem philosophy
 
 Cross-cutting rules that apply to **all** sub-projects, unless an explicitly documented exception:
 
-- **Strict JPMS** — every module has its own `module-info.java`, minimal `exports`, no unjustified `opens`, no classpath.
+- **Strict Java Modules** — every module has its own `module-info.java`, minimal `exports`, no unjustified `opens`, no classpath.
 - **Maximum static code generation** — prefer the **Class-File API** (JEP 484) and APT to produce at compile time what would otherwise be runtime reflection. No dynamic proxies, no ASM/Byte Buddy, no on-the-fly reflection when it can be generated at `compile`/`process-classes`. AOT-compatible (GraalVM, Leyden CDS).
 - **Zero or very few external dependencies** — only the relevant Jakarta / MicroProfile specs. Any new runtime dependency must be explicitly justified in the PR.
 - **Mandatory TDD** — write the test (or the TCK scenario) before the code. Red → green → refactor.
