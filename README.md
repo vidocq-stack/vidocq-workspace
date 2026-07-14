@@ -43,10 +43,11 @@ submodules.
    mani sync              # clones each project into <repo>/main/
    mani run -a install-hooks # wires the shared DCO sign-off hooks into every repo
    ```
-   The projects (`vauban`, `vidocq`, `cassini`, `champollion`, `chappe`, `foy`,
-   `mansart`, and the MicroProfile bricks `ravel`, `knock`, `dirac`,
-   `heisenberg`, `grimm`, `cyrano`, `cervantes`, `humboldt`) stay independent git
-   repos and are ignored here.
+   The projects — the foundational bricks (`chappe`, `vauban`, `champollion`),
+   the Jakarta EE layers (`foy`, `cassini`, `mansart`), the MicroProfile bricks
+   (`ravel`, `knock`, `dirac`, `heisenberg`, `cervantes`, `cyrano`, `humboldt`,
+   `grimm`), the runtime (`vidocq`), and the support repos (`vidocq-parent`,
+   `vidocq-docs`, `ci`) — stay independent git repos and are ignored here.
 3. Open Claude Code at the workspace root — the shared agents, skills and
    conventions are available immediately.
 
