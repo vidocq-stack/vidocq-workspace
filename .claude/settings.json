@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "//": "SHARED, portable Claude Code settings for the Vidocq multi-repo workspace. Committed and reviewed as team config. Keep it PORTABLE: no absolute paths, no machine-specific entries, no secrets. Each developer's personal grants live in .claude/settings.local.json (git-ignored).",
+  "permissions": {
+    "allow": [
+      "Bash(./mvnw *)",
+      "Bash(mvn *)",
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git branch*)",
+      "Bash(git show*)",
+      "Bash(./run-official-tck-*.sh*)",
+      "Bash(./run-tck.sh*)",
+      "mcp__plugin_context-mode_context-mode__ctx_execute",
+      "mcp__plugin_context-mode_context-mode__ctx_search",
+      "mcp__plugin_context-mode_context-mode__ctx_batch_execute"
+    ],
+    "deny": [
+      "Read(**/tokens*.env)",
+      "Read(~/.config/vidocq/**)"
+    ]
+  }
+}

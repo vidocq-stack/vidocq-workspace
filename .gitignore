@@ -1,0 +1,33 @@
+# ===========================================================================
+#  Vidocq Claude workspace — .gitignore
+#
+#  This repository is meant to be checked out AS the root of your multi-repo
+#  Vidocq working directory. The individual project repositories (vauban,
+#  vidocq, cassini, champollion, chappe, foy, mansart, ravel, knock, dirac,
+#  heisenberg, grimm, cyrano, cervantes, humboldt, …) are cloned INTO this
+#  directory by the checkout tooling and each keeps its OWN independent git
+#  repo. They must never be tracked here.
+# ===========================================================================
+
+# Ignore every top-level directory (the nested project clones)…
+/*/
+# …except the shared Claude Code config, which IS this repo's payload.
+!/.claude/
+
+# --- Personal / local Claude Code config — never shared ---
+.claude/settings.local.json
+.claude/**/*.local.*
+.claude.json
+
+# --- Secrets must never live here (kept in ~/.config/vidocq/tokens.env) ---
+*.env
+!*.env.example
+tokens*.env
+
+# --- OS / editor noise ---
+.DS_Store
+**/.DS_Store
+*.swp
+*~
+.idea/
+*.iml
