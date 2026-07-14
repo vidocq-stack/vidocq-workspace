@@ -1,0 +1,34 @@
+#!/bin/sh
+# Auto-append Signed-off-by trailer (DCO 1.1) if not already present.
+# Shared workspace hook. Wired per repo via core.hooksPath — run
+# `mani run install-hooks` to point every workspace repo here
+# (see docs/working-with-mani-and-worktrees.md → Git hooks).
+#
+# Args: $1 = path to commit message file, $2 = source ('message','template',
+# 'merge','squash','commit'), $3 = SHA1 (when amending).
+#
+# Skip when the message is being prepared for a merge or when the user
+# is amending an existing commit that already carries a sign-off.
+
+COMMIT_MSG_FILE="$1"
+COMMIT_SOURCE="$2"
+
+case "$COMMIT_SOURCE" in
+  merge) exit 0 ;;
+esac
+
+NAME=$(git config user.name)
+EMAIL=$(git config user.email)
+
+if [ -z "$NAME" ] || [ -z "$EMAIL" ]; then
+  echo "prepare-commit-msg: user.name / user.email not set — cannot sign off" >&2
+  exit 1
+fi
+
+SOB="Signed-off-by: $NAME <$EMAIL>"
+
+if ! grep -qF "$SOB" "$COMMIT_MSG_FILE"; then
+  git interpret-trailers --if-exists doNothing \
+    --trailer "$SOB" \
+    --in-place "$COMMIT_MSG_FILE"
+fi

@@ -1,9 +1,10 @@
-# Vidocq Claude workspace
+# Vidocq workspace
 
-Shared **Claude Code** configuration for working across the Vidocq multi-repo
-ecosystem — agents, skills, workspace conventions and portable settings. Check
-this repository out **as the root of your working directory**, then let the
-checkout tooling clone the individual project repos inside it.
+The root of the Vidocq multi-repo working directory. It bundles the shared
+**Claude Code** config (agents, skills, conventions), the **mani** orchestration
+(`mani.yaml`), and the shared **git hooks** (`.githooks/`). Check this repository
+out **as the root of your working directory**, then let mani clone the
+individual project repos inside it.
 
 ## Layout
 
@@ -14,15 +15,16 @@ this repo only ever tracks the shared Claude config.
 
 ```
 <your-workspace>/            ← clone of THIS repo (its .git lives here)
-├── .claude/
-│   ├── agents/              ← shared subagents (audit / codegen / TCK / concurrency / deps)
-│   ├── skills/              ← shared slash-skills (/log-bug, /log-bench)
-│   └── settings.json        ← SHARED, portable Claude Code settings (reviewed as team config)
+├── .claude/                 ← shared subagents + slash-skills + settings.json
 ├── CLAUDE.md                ← workspace conventions (commit rules, Java Modules/codegen/zero-dep, TDD, …)
+├── mani.yaml                ← mani orchestration: project list + cross-repo tasks
+├── .githooks/               ← shared git hooks (DCO sign-off)
+├── docs/                    ← workspace guides (mani & worktrees)
 ├── .gitignore               ← ignores the nested project clones + local/secret files
 ├── README.md
 │
-├── vauban/   vidocq/   cassini/   champollion/   chappe/   foy/   mansart/   …   ← cloned here, own git, ignored
+├── vauban/main/  vidocq/main/  cassini/main/  …   ← cloned here (own git), ignored
+│   └── <branch>/            ← optional sibling worktrees, dir name == branch name
 ```
 
 Because a git repository can only track files **below** its own root, keeping
@@ -34,15 +36,22 @@ submodules.
 
 1. Clone this repo as your workspace directory:
    ```bash
-   git clone <this-repo-url> vidocq && cd vidocq
+   git clone git@codeberg.org:Vidocq/vidocq-workspace.git vidocq && cd vidocq
    ```
-2. Populate the project repos with the multi-repo checkout tooling *(provided
-   separately)* — it clones `vauban`, `vidocq`, `cassini`, `champollion`,
-   `chappe`, `foy`, `mansart`, and the MicroProfile bricks (`ravel`, `knock`,
-   `dirac`, `heisenberg`, `grimm`, `cyrano`, `cervantes`, `humboldt`) into this
-   directory. They stay independent git repos and are ignored here.
+2. Install [mani](https://github.com/alajmo/mani) and populate the project repos:
+   ```bash
+   mani sync              # clones each project into <repo>/main/
+   mani run -a install-hooks # wires the shared DCO sign-off hooks into every repo
+   ```
+   The projects (`vauban`, `vidocq`, `cassini`, `champollion`, `chappe`, `foy`,
+   `mansart`, and the MicroProfile bricks `ravel`, `knock`, `dirac`,
+   `heisenberg`, `grimm`, `cyrano`, `cervantes`, `humboldt`) stay independent git
+   repos and are ignored here.
 3. Open Claude Code at the workspace root — the shared agents, skills and
    conventions are available immediately.
+
+See **[docs/working-with-mani-and-worktrees.md](docs/working-with-mani-and-worktrees.md)**
+for the mani use cases, the worktree workflow, git hooks, and IntelliJ setup.
 
 ## What's shared
 

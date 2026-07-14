@@ -1,5 +1,5 @@
 # ===========================================================================
-#  Vidocq Claude workspace — .gitignore
+#  Vidocq workspace — .gitignore
 #
 #  This repository is meant to be checked out AS the root of your multi-repo
 #  Vidocq working directory. The individual project repositories (vauban,
@@ -11,8 +11,10 @@
 
 # Ignore every top-level directory (the nested project clones)…
 /*/
-# …except the shared Claude Code config, which IS this repo's payload.
+# …except this repo's payload: the shared Claude config, git hooks and docs.
 !/.claude/
+!/.githooks/
+!/docs/
 
 # --- Personal / local Claude Code config — never shared ---
 .claude/settings.local.json
