@@ -48,6 +48,10 @@ Logical dependency graph: `chappe` + `vauban` + `champollion` are the foundation
 
 **Multi-repo impact**: before modifying a foundational building block, check its consumers via `GestionProjet/graph/inverted.json` — a change in `vauban` ripples through almost the entire workspace.
 
+## Workspace orchestration
+
+This workspace is managed with **mani** (`mani.yaml`): each project is cloned as `<repo>/main/`, with optional sibling worktrees `<repo>/<branch>/` (directory name == branch name). Handy commands: `mani run -a status`, `mani run -a sync-all`, `mani run -a install-hooks` (wires the shared DCO sign-off hooks), `BRANCH=… mani run wt-add -p <repo>`. `mani run`/`mani exec` always need a target (`-a`/`-t`/`-p`). Full guide: `docs/working-with-mani-and-worktrees.md`.
+
 ## Commit conventions
 
 - **Author and committer: the human alone.** An AI is not an author (Thaler v. Perlmutter, 2026).

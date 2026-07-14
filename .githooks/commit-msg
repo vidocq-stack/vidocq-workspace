@@ -1,0 +1,34 @@
+#!/bin/sh
+# Safety-net: block any commit that ends up without a Signed-off-by trailer.
+# Shared workspace hook. Wired per repo via core.hooksPath — run
+# `mani run install-hooks` to point every workspace repo here
+# (see docs/working-with-mani-and-worktrees.md → Git hooks).
+#
+# This catches cherry-pick, --amend without -s, IDE commits, scripted
+# commits, and any other path where prepare-commit-msg did not fire.
+#
+# Args: $1 = path to commit message file.
+
+COMMIT_MSG_FILE="$1"
+
+if [ -z "$(git interpret-trailers --parse "$COMMIT_MSG_FILE" \
+            | grep -i '^Signed-off-by:')" ]; then
+  cat >&2 <<'EOF'
+commit-msg: missing Signed-off-by trailer.
+
+Vidocq uses DCO 1.1 — every commit must be signed off.
+Fix this commit with:
+
+    git commit --amend -s --no-edit
+
+Or, for a freshly typed message:
+
+    git commit -s ...
+
+For a range of past commits on a feature branch:
+
+    git rebase --signoff <base-branch>
+
+EOF
+  exit 1
+fi
