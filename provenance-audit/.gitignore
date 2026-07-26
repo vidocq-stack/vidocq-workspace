@@ -1,0 +1,8 @@
+# Downloaded reference implementations and derived analysis output: reproducible from
+# fetch-corpus.sh + scan.sh, never committed (21 MB of third-party sources, and CPD
+# reports that embed excerpts of them).
+ri/
+corpus/
+reports-*/
+cp.txt
+target/

@@ -31,3 +31,6 @@ tokens*.env
 *~
 .idea/
 *.iml
+
+# …and the provenance audit tooling, which IS part of this repo (see PROVENANCE-AUDIT.md).
+!/provenance-audit/
