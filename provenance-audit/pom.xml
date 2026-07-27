@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Resolves the PMD/CPD command line from Maven Central, so the provenance audit needs no
+    binary downloaded from outside Central and can be reproduced by a third party from this
+    file alone.
+
+    Standalone on purpose: no <parent>, and not a module of any Vidocq reactor — the audit
+    tooling must never end up on a runtime or build path of the project it audits.
+
+        mvn -q dependency:build-classpath -Dmdep.outputFile=cp.txt
+-->
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.vidocq.audit</groupId>
+    <artifactId>provenance-audit-tooling</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <name>Vidocq :: Provenance audit tooling</name>
+    <description>PMD/CPD command line used by PROVENANCE-AUDIT.md</description>
+
+    <properties>
+        <pmd.version>7.26.0</pmd.version>
+        <jplag.version>6.3.0</jplag.version>
+    </properties>
+
+    <dependencies>
+        <!-- Pass 1 & 2: token-sequence clone detection. -->
+        <dependency>
+            <groupId>net.sourceforge.pmd</groupId>
+            <artifactId>pmd-cli</artifactId>
+            <version>${pmd.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sourceforge.pmd</groupId>
+            <artifactId>pmd-java</artifactId>
+            <version>${pmd.version}</version>
+        </dependency>
+
+        <!--
+            Pass 3: structural similarity over the parsed program, not raw token windows.
+            Greedy String Tiling on a language-aware token stream detects code that was
+            restructured (statements reordered, control flow rewritten, methods split),
+            which CPD cannot see. Addresses limit 1 of PROVENANCE-AUDIT.md §5.
+        -->
+        <dependency>
+            <groupId>de.jplag</groupId>
+            <artifactId>jplag</artifactId>
+            <version>${jplag.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>de.jplag</groupId>
+            <artifactId>java</artifactId>
+            <version>${jplag.version}</version>
+        </dependency>
+    </dependencies>
+</project>
