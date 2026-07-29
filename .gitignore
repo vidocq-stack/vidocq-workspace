@@ -34,3 +34,6 @@ tokens*.env
 
 # …and the provenance audit tooling, which IS part of this repo (see PROVENANCE-AUDIT.md).
 !/provenance-audit/
+
+# …and the master prompts, which ARE part of this repo (see WORK_WITH_CLAUDE.md).
+!/prompts/
