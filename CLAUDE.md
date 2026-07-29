@@ -4,23 +4,56 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Nature du dépôt
 
-Ce répertoire est un **workspace** regroupant sept projets Maven indépendants — il n'y a **pas de POM racine**, **pas de `mvnw` racine**, et **pas de reactor unifié**. Chaque sous-projet a son propre reactor, son propre `.sdkmanrc`, son propre `mvnw`, et la plupart ont leur propre `CLAUDE.md` à consulter en priorité quand on travaille dedans.
+Ce répertoire est un **workspace** regroupant une quinzaine de projets Maven indépendants — il n'y a **pas de POM racine**, **pas de `mvnw` racine**, et **pas de reactor unifié**. Chaque sous-projet a son propre reactor, son propre `.sdkmanrc`, son propre `mvnw`, et la plupart ont leur propre `CLAUDE.md` à consulter en priorité quand on travaille dedans.
+
+**Briques fondatrices** (aucune dépendance entre elles) :
 
 ```
-chappe/        Serveur HTTP/1.1+H2/H3 pur Java 25, zéro dépendance — couche transport
+chappe/        Serveur HTTP/1.1 + HTTP/2 pur Java 25, zéro dépendance — couche transport
 vauban/        Container CDI 4.1 Lite, JPMS natif, zéro dépendance — DI
 champollion/   Implémentation Jakarta JSON-P 2.1 + JSON-B 3.0, zéro dépendance
-foy/           Implémentation Jakarta Servlet 6.1 (transport via chappe, CDI via vauban)
-cassini/       Implémentation Jakarta REST 4.0 / JAX-RS (transport via chappe, CDI via vauban)
-mansart/       Jakarta Data 1.0 + Jakarta Persistence 3.2 (en conception — voir mansart/PLAN.md)
-vidocq/    Vidocq Runtime — orchestrateur, mécanisme d'extensions, packaging
 ```
 
-Graphe de dépendances logique : `chappe` + `vauban` + `champollion` sont des briques fondatrices sans dépendances entre elles. `foy` et `cassini` les composent. `vidocq` orchestre l'ensemble via une SPI d'extensions inspirée de Quarkus.
+**Implémentations Jakarta EE** (composent les briques fondatrices) :
+
+```
+foy/           Jakarta Servlet 6.1 (transport via chappe, CDI via vauban)
+cassini/       Jakarta REST 4.0 / JAX-RS (transport via chappe, CDI via vauban)
+mansart/       Jakarta Data 1.0 + Jakarta Persistence 3.2, pool JDBC et transactions
+```
+
+**Implémentations MicroProfile** :
+
+```
+ravel/         MicroProfile Config 3.1
+cervantes/     MicroProfile JWT 2.1
+knock/         MicroProfile Health 4.0
+dirac/         MicroProfile Metrics 5.1
+heisenberg/    MicroProfile Fault Tolerance 4.1
+humboldt/      MicroProfile Telemetry 2.1
+cyrano/        MicroProfile Rest Client 4.0
+grimm/         MicroProfile OpenAPI 4.1
+```
+
+**Assemblage et outillage** :
+
+```
+vidocq/           Vidocq Runtime — orchestrateur, mécanisme d'extensions, packaging
+vidocq-parent/    POM parent commun (versions, plugins, profils)
+ci/               Workflows Forgejo Actions mutualisés
+GestionProjet/    Graphe de dépendances inversé + scripts d'impact multi-repo
+```
+
+Graphe de dépendances logique : `chappe` + `vauban` + `champollion` sont les briques fondatrices. `foy`, `cassini` et `mansart` les composent. Les implémentations MicroProfile s'appuient sur `vauban` (CDI) et, selon les cas, sur `cassini` ou `chappe`. `vidocq` orchestre l'ensemble via une SPI d'extensions inspirée de Quarkus et porte la certification MicroProfile 7.1 du runtime assemblé.
+
+**Impact multi-repo** : avant de modifier une brique fondatrice, vérifier ses consommateurs via `GestionProjet/graph/inverted.json` — un changement dans `vauban` rejaillit sur la quasi-totalité du workspace.
 
 ## Conventions de commit
 
-- **Pas de `Co-Authored-By: Claude` ni de mention de l'IA** dans les commit messages. Les commits sont signés par l'auteur humain seul, comme tout commit standard. Cette règle s'applique à tous les sous-projets du workspace.
+- **Auteur et committer : l'humain seul.** Une IA n'est pas un auteur (Thaler v. Perlmutter, 2026).
+- **Assistance IA tracée via `Co-Authored-By:`** nommant l'outil (ex. `Co-Authored-By: Claude Opus 4.x <noreply@anthropic.com>`) sur les commits qu'elle a aidé à produire. C'est un **enregistrement de provenance, pas une revendication de co-paternité légale**. Règle de référence : `AI-POLICY.md`, qui fait foi en cas de doute.
+- **Messages de commit en anglais**, comme le code, la CI et les échanges d'équipe.
+- Cette convention s'applique à tous les sous-projets du workspace.
 
 ## Philosophie de l'écosystème Vidocq
 
@@ -81,5 +114,10 @@ Définis dans `.claude/agents/` et `.claude/skills/` — utiliser proactivement 
 
 Lire le `CLAUDE.md` ou `README.md` du sous-projet ciblé avant de modifier son code — chacun documente ses propres conventions, modules, et roadmap (jalons M2a/M2h/etc., contraintes TDD, principes zéro-dépendance, etc.) :
 
-- `chappe/CLAUDE.md`, `vauban/CLAUDE.md`, `cassini/CLAUDE.md` — guides Claude existants
-- `chappe/README.md`, `vauban/README.md`, `cassini/README.md`, `foy/README.md`, `champollion/README.md`, `vidocq/README.md` — vue produit et architecture détaillée
+- **`<sous-projet>/CLAUDE.md`** — conventions propres à la brique. La plupart des sous-projets en ont un ; il prime sur ce fichier en cas de divergence locale.
+- **`<sous-projet>/README.md`** — vue produit et architecture détaillée.
+- **`<sous-projet>/ROADMAP.md`** — jalons et reste à faire. Il n'y a pas de roadmap unifiée : chaque brique porte la sienne, `vidocq/ROADMAP.md` servant de point d'entrée pour le runtime assemblé.
+- **`<sous-projet>/BUG.md` et `BENCH.md`** — traçabilité (voir plus haut). Les ids de bugs traversent les frontières de projet quand la cause est en amont.
+- **`<sous-projet>/tasks/todo.md` et `tasks/lessons.md`** — plan de travail courant et leçons numérotées, à relire en ouverture de session.
+
+Au niveau du workspace, `WORK_WITH_CLAUDE.md` complète ce fichier : il décrit **comment le mainteneur travaille** (registres Étude/Exécution, pattern de l'hypothèse en « …non ? », exigence de preuve avant affirmation) là où ce `CLAUDE.md` décrit les **conventions techniques**.
