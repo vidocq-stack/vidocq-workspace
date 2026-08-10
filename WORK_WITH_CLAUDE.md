@@ -1,297 +1,314 @@
-# WORK_WITH_CLAUDE.md — Travailler avec Yann sur l'écosystème Vidocq
+# WORK_WITH_CLAUDE.md — Working with Yann on the Vidocq ecosystem
 
-> **Ce que c'est.** Un méta-guide de *collaboration*, complémentaire de `CLAUDE.md`.
-> `CLAUDE.md` dit les **conventions techniques** (JPMS, zéro-dep, codegen, TDD…) ;
-> ce fichier dit **comment Yann travaille avec Claude** : sa posture, ses rituels,
-> ses signaux, ce qui gagne sa confiance et ce qui la perd.
+> **What this is.** A *collaboration* meta-guide, complementary to `CLAUDE.md`.
+> `CLAUDE.md` states the **technical conventions** (Java Modules, zero-dep, codegen,
+> TDD…); this file states **how Yann works with Claude**: his stance, his rituals,
+> his signals, what earns his trust and what loses it.
 >
-> **Comment il a été produit.** Analyse des transcripts réels du workspace :
-> **44 sessions, 1 156 prompts**, traités hors-contexte (extraction des messages
-> humains, thèmes, verbatim). Ce n'est pas une supposition — c'est ce que montrent
-> les échanges. À relire et amender au fil du temps.
+> **How it was produced.** Analysis of the workspace's real transcripts:
+> **44 sessions, 1,156 prompts**, processed out of context (extraction of the human
+> messages, themes, verbatim quotes). This is not guesswork — it is what the
+> exchanges show. To be re-read and amended over time.
 >
-> **Langue.** Fichier de pilotage → **français** (comme `tasks/` et les prompts
-> d'agents). Rappel : le *chat* reste en français, mais **code, commits, CI et
-> messages d'équipe sont en anglais** (projet européen multi-contributeurs).
+> **Language.** This file is written in **English**, like `CLAUDE.md`, the code, the
+> CI and team messages (European project, multiple contributors). Reminder: the
+> *chat* stays in **French**. Verbatim quotes are kept in their original French —
+> they are evidence, not prose — with an English rendering in brackets.
 >
-> **Note de publication.** Cette version publique est expurgée de la section
-> décrivant l'infrastructure interne (hôtes, secrets, chemins locaux). Le contenu
-> méthodologique est intact.
+> **Publication note.** This public version is redacted of the section describing the
+> internal infrastructure (hosts, secrets, local paths). The methodological content
+> is intact.
 
 ---
 
-## 1. En une phrase
+## 1. In one sentence
 
-> Yann est un **architecte-mainteneur** qui pense **écosystème**, pilote par
-> **prompts courts et directs**, **challenge** les décisions par des hypothèses
-> en « …non ? », et n'accepte une affirmation que **prouvée** (build vert, TCK,
-> `clean install`, commit poussé). Il alterne **études** approfondies et
-> **exécutions** déléguées d'un simple « go ».
-
----
-
-## 2. Qui est en face
-
-- **Rôle** : seul mainteneur humain principal de ~15 sous-projets Maven indépendants
-  (réimplémentations Jakarta/MicroProfile zéro-dépendance). Co-contributeurs :
-  **Antoine** et des PR externes occasionnelles.
-- **Niveau** : très haut. Il connaît la spec, la JVM, la CI, l'infra. Il a
-  **souvent raison** quand il corrige — ne pas le contredire à la légère, vérifier.
-- **Posture** : ce n'est pas un donneur d'ordres qui exécute des tickets. C'est un
-  **pair qui réfléchit à voix haute**, délègue l'exécution et la fouille, mais
-  garde la décision d'architecture et exige d'en comprendre le « pourquoi ».
-- **Contexte réel** : vraie infra (forge, CI, registre, mirrors, Maven Central) et
-  vrais incidents d'exploitation. Il me **donne accès** aux outils et attend que je
-  m'en serve.
+> Yann is an **architect-maintainer** who thinks in terms of the **ecosystem**,
+> steers through **short, direct prompts**, **challenges** decisions with
+> "…right?" hypotheses, and accepts a claim only once it is **proven** (green build,
+> TCK, `clean install`, commit pushed). He alternates between in-depth **studies**
+> and **executions** delegated with a plain "go".
 
 ---
 
-## 3. La boucle de travail
+## 2. Who you are dealing with
+
+- **Role**: sole main human maintainer of ~15 independent Maven sub-projects
+  (zero-dependency Jakarta/MicroProfile reimplementations). Co-contributors:
+  **Antoine** and occasional external PRs.
+- **Level**: very high. He knows the spec, the JVM, the CI, the infrastructure. He is
+  **often right** when he corrects — do not contradict him lightly, verify.
+- **Stance**: he is not an order-giver processing tickets. He is a **peer thinking out
+  loud**, who delegates execution and digging, but keeps the architectural decision
+  and demands to understand the "why" behind it.
+- **Real context**: real infrastructure (forge, CI, registry, mirrors, Maven Central)
+  and real operational incidents. He **gives me access** to the tools and expects me
+  to use them.
+
+---
+
+## 3. The work loop
 
 ```mermaid
 flowchart TD
-    A["Ouverture de session<br/>resync : git pull rebase, localiser sources, charger en mémoire"] --> B{"Mode ?"}
-    B -->|"Comprendre / décider"| C["ÉTUDE<br/>diagnostic, comparatif, artefact écrit<br/>RELEASE.md / PLAN.md / BENCH.md"]
-    B -->|"Faire"| D["EXÉCUTION<br/>TDD rouge→vert→refactor"]
-    C --> E["Hypothèse soumise<br/>« …non ? »"]
-    E -->|"Yann valide : « go »"| D
-    E -->|"Yann redresse"| C
-    D --> F["PREUVE<br/>clean install vert · TCK · build CI · commit+push"]
-    F -->|"non prouvé / incomplet"| D
-    F -->|"prouvé"| G["TRACE<br/>commit (Co-Authored-By si IA a assisté) · BUG.md / BENCH.md · doc Antora FR+EN · mémoire"]
-    G --> H["/compact pour continuer · /clear pour repartir propre"]
+    A["Session opening<br/>resync: git pull rebase, locate sources, load into memory"] --> B{"Mode?"}
+    B -->|"Understand / decide"| C["STUDY<br/>diagnosis, comparison, written artefact<br/>RELEASE.md / PLAN.md / BENCH.md"]
+    B -->|"Do"| D["EXECUTION<br/>TDD red→green→refactor"]
+    C --> E["Hypothesis submitted<br/>'…right?'"]
+    E -->|"Yann approves: 'go'"| D
+    E -->|"Yann corrects course"| C
+    D --> F["PROOF<br/>green clean install · TCK · CI build · commit+push"]
+    F -->|"unproven / incomplete"| D
+    F -->|"proven"| G["TRACE<br/>commit (Co-Authored-By if AI assisted) · BUG.md / BENCH.md · Antora docs FR+EN · memory"]
+    G --> H["/compact to continue · /clear to start clean"]
     H --> A
 ```
 
-**Le point non négociable, c'est `F` (la preuve).** Tant que ce n'est pas vert et
-prouvé *par moi-même*, ce n'est pas fini (voir §5.2 et §7).
+**The non-negotiable point is `F` (the proof).** As long as it is not green and
+proven *by me*, it is not done (see §5.2 and §7).
 
 ---
 
-## 4. Les deux registres : Étude vs Exécution
+## 4. The two registers: Study vs Execution
 
-Yann sépare nettement **réfléchir** et **faire**. Reconnaître le registre évite le
-contresens (foncer quand il veut analyser, ou tergiverser quand il veut un résultat).
+Yann draws a sharp line between **thinking** and **doing**. Recognising the register
+avoids the misunderstanding of charging ahead when he wants analysis, or dithering
+when he wants a result.
 
 ```mermaid
 flowchart LR
-    subgraph ETUDE["🔬 ÉTUDE — produire de la compréhension"]
+    subgraph STUDY["🔬 STUDY — produce understanding"]
       direction TB
-      E1["« Je vais te lancer sur une etude »"]
-      E2["« Nouvelle etude. À m'attendre dans RELEASE.md »"]
-      E3["« On va etudier les perfs de chappe… bench vs jetty ? »"]
-      E4["« Rappel moi pourquoi ça c'est mieux que… »"]
+      E1["'Je vais te lancer sur une etude'<br/>(I'm going to set you on a study)"]
+      E2["'Nouvelle etude. À m'attendre dans RELEASE.md'<br/>(New study. To be waiting for me in RELEASE.md)"]
+      E3["'On va etudier les perfs de chappe… bench vs jetty ?'<br/>(Let's study chappe's performance… bench vs jetty?)"]
+      E4["'Rappel moi pourquoi ça c'est mieux que…'<br/>(Remind me why this is better than…)"]
     end
-    subgraph EXEC["⚙️ EXÉCUTION — produire un résultat"]
+    subgraph EXEC["⚙️ EXECUTION — produce a result"]
       direction TB
-      X1["« go » / « non vas y »"]
-      X2["« deploie le pr.yml partout stp »"]
-      X3["« fait un git pull rebase de tous mes projets »"]
-      X4["« tu peux fixer »"]
+      X1["'go' / 'non vas y' (no, go ahead)"]
+      X2["'deploie le pr.yml partout stp'<br/>(deploy pr.yml everywhere please)"]
+      X3["'fait un git pull rebase de tous mes projets'<br/>(do a git pull rebase of all my projects)"]
+      X4["'tu peux fixer' (can you fix it)"]
     end
-    ETUDE -->|"hypothèse validée"| EXEC
+    STUDY -->|"hypothesis validated"| EXEC
 ```
 
-| | **ÉTUDE** | **EXÉCUTION** |
+| | **STUDY** | **EXECUTION** |
 |---|---|---|
-| Déclencheur | « étude », « bilan », « rappelle-moi pourquoi », « était-ce un bon choix ? » | « go », « vas y », « fixe », « déploie », « renomme » |
-| Livrable attendu | un **artefact écrit** (`RELEASE.md`, `PLAN.md`, comparatif, post-mortem) | du **code mergé + preuve verte** |
-| Mon job | options, trade-offs, **une reco** (pas un catalogue) | TDD, build, push, trace |
-| Erreur à éviter | coder avant d'avoir aligné la décision | re-débattre ce qui est déjà tranché |
+| Trigger | "étude", "bilan", "rappelle-moi pourquoi", "était-ce un bon choix ?" | "go", "vas y", "fixe", "déploie", "renomme" |
+| Expected deliverable | a **written artefact** (`RELEASE.md`, `PLAN.md`, comparison, post-mortem) | **merged code + green proof** |
+| My job | options, trade-offs, **one recommendation** (not a catalogue) | TDD, build, push, trace |
+| Mistake to avoid | coding before the decision is aligned | re-debating what is already settled |
 
 ---
 
-## 5. Les patterns d'interaction (avec verbatim réels)
+## 5. Interaction patterns (with real verbatim quotes)
 
-### 5.1 — L'hypothèse en « …non ? » (le plus fréquent)
-Il ne donne pas toujours un ordre : il **pose une hypothèse technique et demande
-réfutation ou confirmation**. C'est une invitation à vérifier, pas une certitude.
+### 5.1 — The "…right?" hypothesis (the most frequent)
+He does not always give an order: he **states a technical hypothesis and asks for
+refutation or confirmation**. It is an invitation to verify, not a certainty.
 
-> « C'est à la BCE de Cassini de faire le Job **non ?** » · « en utilisant une
-> `buildCompatibleExtension` tu dois pouvoir ajouter l'interceptor **non ?** » ·
-> « cyrano est un rest client **non ?** » · « il manque un jpackage **non ?** »
+> « C'est à la BCE de Cassini de faire le Job **non ?** » [it's Cassini's
+> `BuildCompatibleExtension` that should do the job, right?] · « en utilisant une
+> `buildCompatibleExtension` tu dois pouvoir ajouter l'interceptor **non ?** » [using a
+> `buildCompatibleExtension` you should be able to add the interceptor, right?] ·
+> « cyrano est un rest client **non ?** » [cyrano is a REST client, right?] · « il
+> manque un jpackage **non ?** » [a jpackage is missing, right?]
 
-**Réponse attendue :** vérifier dans le code, puis **trancher avec preuve** — lui
-donner raison *ou* le détromper avec l'évidence. Surtout pas un « oui » de
-complaisance : quand son fix Vauban était mauvais, il a redressé **trois fois**
-(« Le dernier fix sur Vauban n'est pas bon… non ? ») — il avait raison.
+**Expected response:** check in the code, then **settle it with proof** — either agree
+with him *or* disabuse him with the evidence. Above all, no complacent "yes": when his
+Vauban fix was bad, he corrected course **three times** ("Le dernier fix sur Vauban
+n'est pas bon… non ?" — the last fix on Vauban isn't good… right?) — he was right.
 
-### 5.2 — Preuve avant affirmation
-Question récurrente, presque un réflexe :
+### 5.2 — Proof before assertion
+A recurring question, almost a reflex:
 
-> « tu as tout **commit et push** ? » · « tu as bien vérifier **TOUS** les sous
-> répertoires ? » · « On **reverifie** tout ? » · « compile tck etc ? » ·
-> « tu peux **vérifier les status des build** sur la CI ? »
+> « tu as tout **commit et push** ? » [have you committed and pushed everything?] ·
+> « tu as bien vérifier **TOUS** les sous répertoires ? » [did you really check ALL the
+> subdirectories?] · « On **reverifie** tout ? » [shall we re-verify everything?] ·
+> « compile tck etc ? » · « tu peux **vérifier les status des build** sur la CI ? »
+> [can you check the build statuses on CI?]
 
-**Réponse attendue :** ne jamais déclarer « vert / fait / corrigé » sans avoir
-lancé la commande et lu la sortie. Les agents ont déjà **menti dans les deux sens**
-(faux « vert », faux « incomplet ») → **revérifier moi-même**. Et **toujours
-`clean install`**, jamais `install`/`test` isolé : un `target/` périmé fabrique de
-faux échecs.
+**Expected response:** never declare "green / done / fixed" without having run the
+command and read the output. Agents have already **lied in both directions** (false
+"green", false "incomplete") → **re-verify it myself**. And **always `clean install`**,
+never an isolated `install`/`test`: a stale `target/` manufactures false failures.
 
-### 5.3 — Le « go » laconique
-Une fois l'analyse alignée, il déclenche en deux mots. La concision **est** le feu vert.
+### 5.3 — The laconic "go"
+Once the analysis is aligned, he triggers with two words. The terseness **is** the
+green light.
 
-> « go » · « non vas y » · « Non vas y, PR de test »
+> « go » · « non vas y » [no, go ahead] · « Non vas y, PR de test » [no, go ahead, test PR]
 
-**Réponse attendue :** exécuter, ne pas re-demander confirmation, ne pas re-débattre.
+**Expected response:** execute, do not ask for confirmation again, do not re-debate.
 
-### 5.4 — Penser écosystème (chantiers transverses)
-Beaucoup de demandes touchent **tous les projets à la fois**.
+### 5.4 — Thinking ecosystem (cross-cutting campaigns)
+Many requests touch **every project at once**.
 
-> « gros chantier, on va basculer en **triple license** EPL/GPL/EUPL, faut mettre
-> tous les projets à jour » · « on va passer **tous les projet** en maven 3.9.16 » ·
-> « renommer Vidocq MicroProfile **Server → Runtime** (vidocq-mps → vidocqmpr) »
+> « gros chantier, on va basculer en **triple license** EPL/GPL/EUPL, faut mettre tous
+> les projets à jour » [big campaign, we're switching to triple licensing EPL/GPL/EUPL,
+> all the projects need updating] · « on va passer **tous les projet** en maven 3.9.16 »
+> [we're moving all the projects to maven 3.9.16] · « renommer Vidocq MicroProfile
+> **Server → Runtime** (vidocq-mps → vidocqmpr) » [rename Vidocq MicroProfile
+> Server → Runtime]
 
-**Réponse attendue :** raisonner à l'échelle du workspace (ordre d'install, parent
-d'abord, mirrors, CI, docs), pas projet par projet en silo.
+**Expected response:** reason at workspace scale (install order, parent first, mirrors,
+CI, docs), not project by project in a silo.
 
-### 5.5 — Justifier & post-mortem
-Il challenge les décisions **passées** et veut réancrer le « pourquoi ».
+### 5.5 — Justify & post-mortem
+He challenges **past** decisions and wants the "why" re-anchored.
 
-> « **Rappel moi pourquoi** ça c'est mieux que le discover de l'apt automatique ? » ·
-> « on a fait le choix de ne pas utiliser le sdk OpenTelemetry. **Était-ce un bon
-> choix in fine ?** » · « pourquoi tu ne l'as pas implémenté à la base quand tu as
-> fait cassini !! »
+> « **Rappel moi pourquoi** ça c'est mieux que le discover de l'apt automatique ? »
+> [remind me why this is better than automatic APT discovery?] · « on a fait le choix de
+> ne pas utiliser le sdk OpenTelemetry. **Était-ce un bon choix in fine ?** » [we chose
+> not to use the OpenTelemetry SDK. Was that a good choice in the end?] · « pourquoi tu
+> ne l'as pas implémenté à la base quand tu as fait cassini !! » [why didn't you
+> implement it in the first place when you did cassini!!]
 
-**Réponse attendue :** réponse honnête et argumentée, y compris « c'était une
-erreur / un compromis daté ». Pas de réécriture flatteuse de l'histoire.
+**Expected response:** an honest, argued answer, including "it was a mistake / a
+trade-off that has aged". No flattering rewrite of history.
 
-### 5.6 — Debugging par symptôme collé
-Il colle la **trace brute** (build failed, stack, validation Central) + « tu peux fixer ».
+### 5.6 — Debugging from a pasted symptom
+He pastes the **raw trace** (build failed, stack, Central validation) + "tu peux fixer".
 
-> « La release a failed pour chappe : 10 failed Component Validations… » ·
-> « webhook manquant — cannot send 'pr-open' notification »
+> « La release a failed pour chappe : 10 failed Component Validations… » [the release
+> failed for chappe: 10 failed Component Validations…] · « webhook manquant — cannot
+> send 'pr-open' notification » [missing webhook]
 
-**Réponse attendue :** debug systématique depuis le symptôme réel (cf. skill
-`systematic-debugging`), reproduire, corriger la cause, prouver.
+**Expected response:** systematic debugging from the real symptom (cf. the
+`systematic-debugging` skill), reproduce, fix the cause, prove it.
 
-### 5.7 — Entretien de la mémoire
-> « ajoute le projet a ta mémoire et jette y un oeil je viens de le cloner »
+### 5.7 — Memory upkeep
+> « ajoute le projet a ta mémoire et jette y un oeil je viens de le cloner » [add the
+> project to your memory and take a look, I've just cloned it]
 
-**Réponse attendue :** tenir la mémoire à jour (faits non dérivables du code), et
-**vérifier** qu'une note n'est pas périmée avant de s'y fier.
+**Expected response:** keep the memory up to date (facts not derivable from the code),
+and **verify** that a note has not gone stale before relying on it.
 
-### 5.8 — Resync d'ouverture
-Une session démarre souvent par une remise à niveau de l'état.
+### 5.8 — Opening resync
+A session often starts with bringing the state up to date.
 
-> « tu peux **git pull rebase** les projets ? » · « On reprend sur Arago, **tu
-> localise les sources** ? » · « tout est à jour ? »
+> « tu peux **git pull rebase** les projets ? » [can you git pull rebase the projects?] ·
+> « On reprend sur Arago, **tu localise les sources** ? » [we're resuming on Arago, can
+> you locate the sources?] · « tout est à jour ? » [is everything up to date?]
 
-**Réponse attendue :** synchroniser, localiser, charger le contexte **avant** d'agir.
+**Expected response:** synchronise, locate, load the context **before** acting.
 
-### 5.9 — Exiger la complétude
-Il relève les oublis et les demi-finitions, parfois avec une frustration légitime.
+### 5.9 — Demanding completeness
+He calls out omissions and half-finished work, sometimes with legitimate frustration.
 
-> « Il semblerait que humboldt ne soit pas fini. On vérifie et on **fini** ? » ·
-> « il manque un jpackage non ? » · « vidocq docs **manque de composants** »
+> « Il semblerait que humboldt ne soit pas fini. On vérifie et on **fini** ? » [it seems
+> humboldt isn't finished. Shall we check and finish it?] · « il manque un jpackage
+> non ? » [a jpackage is missing, right?] · « vidocq docs **manque de composants** »
+> [vidocq docs is missing components]
 
-**Réponse attendue :** finir le périmètre (« faire le reste » n'est pas une tâche
-à reporter, c'est à terminer maintenant), et le prouver.
+**Expected response:** finish the scope ("doing the rest" is not a task to postpone, it
+is to be completed now), and prove it.
 
 ---
 
-## 6. Cadence & rituels de session
+## 6. Session cadence & rituals
 
-- **Prompts courts** : médiane **58 caractères**, 68 % ≤ 120 c. Les longs (p90 ≈
-  2 900 c.) sont des **briefs d'étude** ou des specs/erreurs collées. → Je peux
-  répondre dense ; lui écrit vite et avec des fautes de frappe assumées (la vitesse
-  prime, ne pas s'en formaliser).
-- **`/compact` (×41) et `/clear` (×29)** : il mène des **sessions longues** qu'il
-  compacte souvent, puis **repart propre** pour un nouveau chantier. Le travail est
-  découpé en gros blocs thématiques.
-- **Début de session** : resync (§5.8).
-- **Fin de chantier** : commit + push + trace (BUG/BENCH/doc/mémoire) **avant** de
-  clore — sinon « tu as tout commit et push ? » tombe.
+- **Short prompts**: median **58 characters**, 68 % ≤ 120 c. The long ones (p90 ≈
+  2,900 c.) are **study briefs** or pasted specs/errors. → I can answer densely; he
+  writes fast and with typos he owns (speed comes first, do not take offence).
+- **`/compact` (×41) and `/clear` (×29)**: he runs **long sessions** which he compacts
+  often, then **starts clean** for a new campaign. The work is cut into large thematic
+  blocks.
+- **Session start**: resync (§5.8).
+- **End of a campaign**: commit + push + trace (BUG/BENCH/docs/memory) **before**
+  closing — otherwise "tu as tout commit et push ?" lands.
 
 ---
 
-## 7. Ce qui gagne sa confiance / ce qui la perd
+## 7. What earns his trust / what loses it
 
-| ✅ Gagne la confiance | ❌ La perd |
+| ✅ Earns trust | ❌ Loses it |
 |---|---|
-| Lancer la commande et **lire la sortie** avant de conclure | Annoncer « vert/fait » sans preuve |
-| `./mvnw clean install` | `install`/`test` isolé sur `target/` périmé |
-| Vérifier le **TCK soi-même** (REST 2535, JWT 206…) | Faire confiance au rapport d'un agent sur le vert |
-| **Finir** le périmètre et le prouver | Laisser un « il manque… » traîner |
-| Le **détromper avec l'évidence** quand il a tort | Acquiescer par complaisance |
-| Post-mortem honnête (« c'était un compromis daté ») | Réécrire l'histoire en flatteur |
-| Penser **workspace** (parent d'abord, mirrors, CI, docs) | Corriger un projet en ignorant ses impacts transverses |
-| Commits transparents : **`Co-Authored-By` quand l'IA a assisté** | Effacer l'IA d'un commit qu'elle a aidé à produire |
+| Running the command and **reading the output** before concluding | Announcing "green/done" without proof |
+| `./mvnw clean install` | An isolated `install`/`test` on a stale `target/` |
+| Verifying the **TCK myself** (REST 2535, JWT 206…) | Trusting an agent's report that it is green |
+| **Finishing** the scope and proving it | Leaving a "there's still…" hanging |
+| **Disabusing him with the evidence** when he is wrong | Nodding along out of complacency |
+| An honest post-mortem ("it was a trade-off that has aged") | Rewriting history flatteringly |
+| Thinking **workspace** (parent first, mirrors, CI, docs) | Fixing one project while ignoring its cross-cutting impact |
+| Transparent commits: **`Co-Authored-By` when the AI assisted** | Erasing the AI from a commit it helped produce |
 
 ---
 
-## 8. Langue, commits, artefacts (rappels durs)
+## 8. Language, commits, artefacts (hard reminders)
 
-- **Commits** : auteur et committer **humain seul**, mais **assistance IA tracée
-  via `Co-Authored-By`** (provenance honnête, pas co-paternité légale — une IA n'est
-  pas un auteur : Thaler v. Perlmutter 2026), message en **anglais**. Cf. `AI-POLICY.md`.
-- **Langue** : chat **FR** · code/Javadoc/commentaires/symboles **EN** · CI,
-  commits, messages d'équipe **EN** · doc **Antora** **FR + EN** (`docs/fr`, `docs/en`).
-- **Notifications CI** : tout message automatique est préfixé par le nom du bot.
-- **CI** : paramètres non sensibles via `vars.X`, secrets via `secrets.X`. Jamais de
-  secret en clair dans un workflow, un README ou un commit.
-- **Traçabilité** : tout bug reproductible → `BUG.md` du sous-projet ; tout chiffre
-  de perf → `BENCH.md` (via les skills `/log-bug`, `/log-bench`). Pas de perf dans
-  un README/commit sans entrée `BENCH.md`.
+- **Commits**: author and committer are **the human alone**, but **AI assistance is
+  recorded via `Co-Authored-By`** (honest provenance, not legal co-authorship — an AI
+  is not an author: Thaler v. Perlmutter 2026), message in **English**.
+  Cf. `AI-POLICY.md`.
+- **Language**: chat **FR** · code/Javadoc/comments/symbols **EN** · CI, commits, team
+  messages **EN** · **Antora** docs **FR + EN** (`docs/fr`, `docs/en`).
+- **CI notifications**: every automated message is prefixed with the bot's name.
+- **CI**: non-sensitive parameters via `vars.X`, secrets via `secrets.X`. Never a secret
+  in clear text in a workflow, a README or a commit.
+- **Traceability**: every reproducible bug → the sub-project's `BUG.md`; every
+  performance figure → `BENCH.md` (via the `/log-bug`, `/log-bench` skills). No
+  performance figure in a README/commit without a `BENCH.md` entry.
 
 ---
 
-## 9. La chronologie des grands chantiers
+## 9. The timeline of the major campaigns
 
-L'arc narratif observé dans les 44 sessions (utile pour situer une demande) :
+The narrative arc observed across the 44 sessions (useful for situating a request):
 
 ```mermaid
 timeline
-    title Vidocq — chantiers observés dans les sessions
-    Genèse        : Graphe de dépendances du workspace : 7 puis ~15 modules Maven
-    Expansion     : Implémentations MicroProfile : cyrano, humboldt, grimm, ravel, knock, dirac, heisenberg : noms d'après des personnages historiques
-    Industrialisation CI : Forgejo Actions : PR validation downstream : notifications d'équipe
-    Incident & migration : perte du matériel d'hébergement : bascule sur une forge externe : remise des mirrors
-    Releases      : 0.1.0 manuelle (Vauban d'abord) : validation Maven Central : jlink / jpackage des exemples
-    Performance   : Chappe Virtual Threads : plafond 100k req/s : bench vs Jetty/Netty
-    Documentation : Antora FR+EN : nivellement des docs faibles : date de MAJ par module
-    Licensing     : Triple licence EPL 2.0 + GPL + EUPL 1.2 sur tous les projets
-    Application   : Arago — app phare sur la stack Vidocq (OIDC, RGPD, i18n, a11y)
-    Méta          : réglages de l'outillage Claude (rétention conversations 90j)
+    title Vidocq — campaigns observed in the sessions
+    Genesis       : Workspace dependency graph : 7 then ~15 Maven modules
+    Expansion     : MicroProfile implementations : cyrano, humboldt, grimm, ravel, knock, dirac, heisenberg : named after historical figures
+    CI industrialisation : Forgejo Actions : downstream PR validation : team notifications
+    Incident & migration : loss of the hosting hardware : switch to an external forge : mirrors restored
+    Releases      : 0.1.0 by hand (Vauban first) : Maven Central validation : jlink / jpackage of the examples
+    Performance   : Chappe Virtual Threads : 100k req/s ceiling : bench vs Jetty/Netty
+    Documentation : Antora FR+EN : levelling up the weak docs : per-module update date
+    Licensing     : Triple licence EPL 2.0 + GPL + EUPL 1.2 across all projects
+    Application   : Arago — flagship app on the Vidocq stack (OIDC, GDPR, i18n, a11y)
+    Meta          : Claude tooling settings (90-day conversation retention)
 ```
 
 ---
 
-## 10. Carte mémoire
+## 10. Memory map
 
 ```mermaid
 mindmap
-  root(("Travailler avec Yann"))
-    Posture
-      Architecte-mainteneur
-      Pense écosystème
-      Pair qui réfléchit à voix haute
-    Signaux
-      Hypothèse soumise en « non »
-      « go » est le feu vert
-      Étude versus Exécution
-    Exigences
-      Preuve avant affirmation
-      clean install toujours
-      Vérifier le TCK soi-même
-      Complétude du périmètre
-    Garde-fous
-      Co-Authored-By si IA a assisté
-      Anglais CI commits
-      BUG.md et BENCH.md
+  root(("Working with Yann"))
+    Stance
+      Architect-maintainer
+      Thinks ecosystem
+      Peer thinking out loud
+    Signals
+      Hypothesis submitted with "right"
+      "go" is the green light
+      Study versus Execution
+    Requirements
+      Proof before assertion
+      clean install always
+      Verify the TCK myself
+      Completeness of the scope
+    Guardrails
+      Co-Authored-By if AI assisted
+      English for CI and commits
+      BUG.md and BENCH.md
 ```
 
 ---
 
-## 11. Checklist de démarrage de session
+## 11. Session start-up checklist
 
-1. **Resync** : `git pull --rebase` des projets concernés, localiser les sources.
-2. **Charger le contexte** : `CLAUDE.md` du sous-projet + mémoire pertinente
-   (et **vérifier** qu'une note n'est pas périmée).
-3. **Identifier le registre** : étude (artefact) ou exécution (« go ») ?
-4. **Travailler en TDD**, à l'échelle du workspace si le chantier est transverse.
-5. **Prouver** : `clean install` vert, TCK lancé moi-même, build CI OK.
-6. **Tracer** : commit (EN, `Co-Authored-By` si l'IA a assisté) + push, `BUG.md`/`BENCH.md`, doc
-   Antora FR+EN, mémoire.
-7. Répondre à « tu as tout commit et push ? » **avant** qu'il ne la pose.
+1. **Resync**: `git pull --rebase` on the relevant projects, locate the sources.
+2. **Load the context**: the sub-project's `CLAUDE.md` + the relevant memory
+   (and **verify** that a note has not gone stale).
+3. **Identify the register**: study (artefact) or execution ("go")?
+4. **Work in TDD**, at workspace scale if the campaign is cross-cutting.
+5. **Prove it**: green `clean install`, TCK run by me, CI build OK.
+6. **Trace it**: commit (EN, `Co-Authored-By` if the AI assisted) + push, `BUG.md`/
+   `BENCH.md`, Antora docs FR+EN, memory.
+7. Answer "tu as tout commit et push ?" **before** he asks it.
