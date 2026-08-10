@@ -1,6 +1,19 @@
 # Prompt for Claude Code — Bootstrapping `vidocq-docs` (v2)
 
-
+> **Historical record — do not re-run.** This prompt has been executed. The
+> `vidocq-docs` repository exists with its playbook, UI bundle, Dockerfile and CI, and
+> the five module repos carry their bilingual `docs/en` + `docs/fr` trees. Its own
+> guardrail ("Refuse if `docs/` already exists") would stop it on the first module. It
+> is kept as the record of how the docs site was bootstrapped.
+>
+> Two of its assumptions have since aged out:
+>
+> - **Layout.** The workspace moved to mani: clones now live at `<repo>/main/`, not as
+>   flat siblings. So `cd <module>`, the `vidocq-docs/` creation step and the local
+>   playbook's `url: ../vidocq` no longer resolve as written — see
+>   [the mani and worktrees guide](../docs/working-with-mani-and-worktrees.md).
+> - **Forge.** Hosting moved from `forge.vidocq.dev` to `codeberg.org/Vidocq`, so the
+>   remote URLs and the `fetch-chappe-version.js` fallback URL below are stale.
 
 You are going to create a documentation system for the Vidocq suite. You are in a directory that contains the clones of the suite's projects. You will:
 
