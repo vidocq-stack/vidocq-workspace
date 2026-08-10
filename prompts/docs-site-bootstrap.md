@@ -1,29 +1,29 @@
-# Prompt pour Claude Code — Bootstrap `vidocq-docs` (v2)
+# Prompt for Claude Code — Bootstrapping `vidocq-docs` (v2)
 
 
 
-Tu vas créer un système de documentation pour la suite Vidocq. Tu te trouves dans un répertoire qui contient les clones des projets de la suite. Tu vas :
+You are going to create a documentation system for the Vidocq suite. You are in a directory that contains the clones of the suite's projects. You will:
 
-1. **Créer un nouveau sous-répertoire frère** `vidocq-docs/` qui héberge la playbook Antora, le UI bundle, le Dockerfile et la CI.
-2. **Modifier les repos existants** `vidocq/`, `vauban/`, `cassini/`, `champollion/`, `chappe/` pour y ajouter un répertoire `docs/` contenant la documentation bilingue de chaque module.
+1. **Create a new sibling sub-directory** `vidocq-docs/` hosting the Antora playbook, the UI bundle, the Dockerfile and the CI.
+2. **Modify the existing repos** `vidocq/`, `vauban/`, `cassini/`, `champollion/`, `chappe/` to add a `docs/` directory containing each module's bilingual documentation.
 
-**Pas de push à la fin**, sur aucun repo.  je reviewerai et pousserai moi-même.
+**No push at the end**, on any repo. I will review and push myself.
 
-## Contexte du projet
+## Project context
 
-La suite Vidocq est un ensemble de runtimes Jakarta EE / MicroProfile dont les noms sont des hommages à des figures françaises de la fin XVIIIᵉ / début XIXᵉ siècle :
+The Vidocq suite is a set of Jakarta EE / MicroProfile runtimes whose names pay tribute to French figures of the late 18th / early 19th century:
 
-- **Vidocq** — runtime serveur MicroProfile (Eugène-François Vidocq, fondateur de la Sûreté Nationale, 1812)
-- **Vauban** — container CDI 4.1 build-time (Sébastien Le Prestre de Vauban, ingénieur militaire de Louis XIV)
-- **Cassini** — REST/JAX-RS (la dynastie des cartographes Cassini, première carte topographique de la France)
-- **Champollion** — JSON-B / JSON-P (Jean-François Champollion, déchiffreur des hiéroglyphes)
-- **Chappe** — serveur HTTP, qui servira ce site (Claude Chappe, télégraphe optique, 1794)
+- **Vidocq** — MicroProfile server runtime (Eugène-François Vidocq, founder of the Sûreté Nationale, 1812)
+- **Vauban** — build-time CDI 4.1 container (Sébastien Le Prestre de Vauban, Louis XIV's military engineer)
+- **Cassini** — REST/JAX-RS (the Cassini dynasty of cartographers, first topographic map of France)
+- **Champollion** — JSON-B / JSON-P (Jean-François Champollion, decipherer of the hieroglyphs)
+- **Chappe** — HTTP server, which will serve this site (Claude Chappe, optical telegraph, 1794)
 
-Identité visuelle : **époque Empire / Restauration, sobre, lettrée, technique**. Pas de pastiche grossier.
+Visual identity: **Empire / Restoration period, sober, literate, technical**. No crude pastiche.
 
-## Étape 0 — Pré-vol
+## Step 0 — Pre-flight
 
-Avant toute modification, vérifie l'état de chaque repo :
+Before any modification, check the state of each repo:
 
 ```bash
 for repo in vidocq vauban cassini champollion chappe; do
@@ -32,44 +32,44 @@ for repo in vidocq vauban cassini champollion chappe; do
 done
 ```
 
-**Refuse de continuer** si un repo a des modifications non committées et signale-les-moi. Je veux pouvoir reprendre proprement après ta passe.
+**Refuse to continue** if a repo has uncommitted modifications, and report them to me. I want to be able to pick up cleanly after your pass.
 
-Pour chaque repo, note :
-- branche par défaut (`main` ou `master`)
-- présence ou non d'un répertoire `docs/` existant — si oui, **arrête-toi et signale**, on en discutera avant
-- conventions de commit observées (présence d'un `.gitmessage`, format des derniers commits)
+For each repo, note:
+- the default branch (`main` or `master`)
+- whether a `docs/` directory already exists — if so, **stop and report**, we will discuss it first
+- the commit conventions observed (presence of a `.gitmessage`, format of the latest commits)
 
-## Étape 1 — Inspection des modules
+## Step 1 — Inspecting the modules
 
-Pour chacun des 5 modules :
+For each of the 5 modules:
 
-1. `pom.xml` racine et de chaque sous-module (groupId, artifactId, version, modules)
-2. `README*` s'il existe
-3. Arborescence `src/main/java` — packages publics, annotations propriétaires, SPI, `module-info.java`
-4. Modules `*-examples`, `*-it`, `*-tck`, `*-bom` s'il y en a
-5. Tests d'intégration qui montrent l'usage réel
+1. the root `pom.xml` and that of each sub-module (groupId, artifactId, version, modules)
+2. `README*` if present
+3. the `src/main/java` tree — public packages, proprietary annotations, SPI, `module-info.java`
+4. the `*-examples`, `*-it`, `*-tck`, `*-bom` modules if any
+5. integration tests that show real usage
 
-Note tout dans `vidocq-docs/NOTES.md` (à supprimer en fin de tâche). Tu **dois** baser le contenu de la doc sur ce que tu trouves réellement. Si un point est flou, mets une admonition `[NOTE]` ou `[TODO]` plutôt que d'inventer.
+Note everything in `vidocq-docs/NOTES.md` (to be deleted at the end of the task). You **must** base the documentation content on what you actually find. If a point is unclear, add a `[NOTE]` or `[TODO]` admonition rather than inventing.
 
-Pour **Chappe en particulier**, identifie :
-- comment lancer Chappe en mode « serveur statique » (CLI, propriétés, fichier de config)
-- présence d'un Dockerfile, d'une image officielle, ou d'instructions de packaging
-- format attendu pour le document root, les rewrite rules, les cache headers
-- version courante (sera utilisée dans le footer)
+For **Chappe in particular**, identify:
+- how to run Chappe in "static server" mode (CLI, properties, config file)
+- the presence of a Dockerfile, an official image, or packaging instructions
+- the expected format for the document root, the rewrite rules, the cache headers
+- the current version (will be used in the footer)
 
-C'est ce qui pilotera le `Dockerfile` final.
+That is what will drive the final `Dockerfile`.
 
-## Étape 2 — Documentation par module (dans chaque repo)
+## Step 2 — Per-module documentation (inside each repo)
 
-Pour chaque module, dans son repo :
+For each module, in its repo:
 
 ```bash
 cd <module>
-git checkout -b docs/initial-bootstrap   # adapte si la branche existe déjà
+git checkout -b docs/initial-bootstrap   # adapt if the branch already exists
 mkdir -p docs/en/modules/ROOT/pages docs/fr/modules/ROOT/pages
 ```
 
-Structure cible dans chaque repo module :
+Target structure in each module repo:
 
 ```
 <module>/
@@ -96,13 +96,13 @@ Structure cible dans chaque repo module :
                 └── migration.adoc
 ```
 
-`antora.yml` minimal (exemple pour Vauban) :
+Minimal `antora.yml` (example for Vauban):
 
 ```yaml
 # docs/en/antora.yml
 name: vauban
 title: Vauban
-version: ~                       # versionless tant qu'on est en 0.x
+version: ~                       # versionless as long as we are on 0.x
 nav:
   - modules/ROOT/nav.adoc
 asciidoc:
@@ -122,38 +122,38 @@ asciidoc:
     lang: fr
 ```
 
-### Convention bilingue
+### Bilingual convention
 
-- **Le français est la version canonique** (cohérent avec l'identité du projet). Tu écris d'abord en FR, puis tu traduis en EN.
-- **Pas de mélange de langues** dans une même page.
-- Les exemples de code, noms d'API, FQN sont **identiques** dans les deux langues — seul le texte autour change.
-- Les titres de pages sont traduits (ex. `Démarrage rapide` / `Getting started`), mais les ID Asciidoc (`[#getting-started]`) restent en anglais pour stabilité des liens.
-- La nav `nav.adoc` est traduite, mais l'ordre des entrées et les xref-cibles sont identiques.
+- **French is the canonical version** (consistent with the project's identity). Write in FR first, then translate to EN.
+- **No mixing of languages** within a single page.
+- Code examples, API names and FQNs are **identical** in both languages — only the surrounding text changes.
+- Page titles are translated (e.g. `Démarrage rapide` / `Getting started`), but the Asciidoc IDs (`[#getting-started]`) stay in English so links remain stable.
+- The `nav.adoc` navigation is translated, but the order of the entries and the xref targets are identical.
 
-### Contenu attendu par page
+### Expected content per page
 
-**`index.adoc`** (qualité élevée, dans les deux langues)
+**`index.adoc`** (high quality, in both languages)
 
-- Titre + lettrine
-- Une phrase de positionnement (« Vauban est un container CDI 4.1 qui résout l'injection au moment de la compilation… »)
-- Section « Pourquoi ? » / « Why? » — 2-3 paragraphes max, le manifeste, le lien historique avec le personnage
-- Section « En bref » / « At a glance » — 4-5 bullets factuels
-- Lien vers `getting-started.adoc`
+- Title + drop cap
+- One positioning sentence ("Vauban is a CDI 4.1 container that resolves injection at compile time…")
+- A "Pourquoi ?" / "Why?" section — 2-3 paragraphs max, the manifesto, the historical link with the figure
+- An "En bref" / "At a glance" section — 4-5 factual bullets
+- A link to `getting-started.adoc`
 
-**`getting-started.adoc`** (qualité élevée, dans les deux langues)
+**`getting-started.adoc`** (high quality, in both languages)
 
-- Pré-requis (Java 25, Maven 4)
-- Snippet Maven minimal (coordonnées GAV lues depuis le pom du module)
-- « Hello world » utilisant un exemple **réellement présent** dans `*-examples` ou `src/test/java`. Si rien ne convient, `[TODO]` explicite.
-- Build et lancement
+- Prerequisites (Java 25, Maven 4)
+- Minimal Maven snippet (GAV coordinates read from the module's pom)
+- A "Hello world" using an example **actually present** in `*-examples` or `src/test/java`. If nothing fits, an explicit `[TODO]`.
+- Build and run
 
-**`concepts.adoc`**, **`reference.adoc`**, **`migration.adoc`** (squelette + premiers contenus si évidents)
+**`concepts.adoc`**, **`reference.adoc`**, **`migration.adoc`** (skeleton + first content where obvious)
 
-- Liste les concepts/annotations/SPI repérés à l'étape 1
-- `[TODO]` admonition pour ce qui n'est pas encore stabilisé
-- Pour `migration.adoc` : Vauban ← Quarkus ArC/Weld, Cassini ← RESTEasy/Jersey, Champollion ← Yasson/Jackson, etc. `[TODO]` si trop tôt.
+- List the concepts/annotations/SPI spotted in step 1
+- A `[TODO]` admonition for whatever is not yet stabilised
+- For `migration.adoc`: Vauban ← Quarkus ArC/Weld, Cassini ← RESTEasy/Jersey, Champollion ← Yasson/Jackson, etc. `[TODO]` if it is too early.
 
-### Commit dans chaque repo module
+### Commit in each module repo
 
 ```bash
 git add docs/
@@ -165,18 +165,18 @@ reference and migration pages. Detailed content TODO where APIs are
 not yet stable.
 
 Refs: vidocq-docs#1"
-# PAS DE PUSH
+# NO PUSH
 cd ..
 ```
 
-## Étape 3 — Repo `vidocq-docs/`
+## Step 3 — The `vidocq-docs/` repo
 
-Crée le répertoire frère :
+Create the sibling directory:
 
 ```
 vidocq-docs/
-├── antora-playbook.yml                 # production (sources Git distantes)
-├── antora-playbook-local.yml           # dev local (../vidocq, ../vauban…)
+├── antora-playbook.yml                 # production (remote Git sources)
+├── antora-playbook-local.yml           # local dev (../vidocq, ../vauban…)
 ├── content/
 │   ├── home-en/
 │   │   ├── antora.yml                  # name: home, title: Vidocq
@@ -191,7 +191,7 @@ vidocq-docs/
 ├── scripts/
 │   └── fetch-chappe-version.js
 ├── Dockerfile
-├── chappe-config.yml                   # config Chappe pour servir le site
+├── chappe-config.yml                   # Chappe config for serving the site
 ├── .forgejo/workflows/build.yml
 ├── .gitignore
 ├── .editorconfig
@@ -202,9 +202,9 @@ vidocq-docs/
     └── 0002-bilingual-fr-en.md
 ```
 
-### Playbook locale
+### Local playbook
 
-`antora-playbook-local.yml` :
+`antora-playbook-local.yml`:
 
 ```yaml
 site:
@@ -248,32 +248,32 @@ asciidoc:
     primary-language: fr
 ```
 
-### Playbook production
+### Production playbook
 
-`antora-playbook.yml` : identique mais `url: ssh://git@forge.vidocq.dev:55122/vidocq/<module>.git` et `branches: [main]` (ou `master` selon la branche par défaut détectée à l'étape 0). Tags sémantiques `v*` ajoutés aux branches une fois qu'on aura nos premières releases.
+`antora-playbook.yml`: identical but with `url: ssh://git@forge.vidocq.dev:55122/vidocq/<module>.git` and `branches: [main]` (or `master`, depending on the default branch detected in step 0). Semantic `v*` tags will be added to the branches once we have our first releases.
 
-### Page d'accueil (home)
+### Home page
 
-`content/home-fr/modules/ROOT/pages/index.adoc` :
+`content/home-fr/modules/ROOT/pages/index.adoc`:
 
-- Manifeste de la suite : pourquoi un nouveau runtime, le pari souverain, l'inspiration historique
-- Grille de cartes vers chaque component (lien xref vers `<module>::index.adoc` ou `<module>-fr::index.adoc` selon la langue)
-- Mention du statut (early, snapshot, pas de garantie de stabilité d'API)
-- Liens rapides : GitHub mirror, forge.vidocq.dev, Matrix/Discord
+- The suite's manifesto: why a new runtime, the sovereignty bet, the historical inspiration
+- A grid of cards to each component (xref link to `<module>::index.adoc` or `<module>-fr::index.adoc` depending on the language)
+- A mention of the status (early, snapshot, no API stability guarantee)
+- Quick links: GitHub mirror, forge.vidocq.dev, Matrix/Discord
 
-`content/home-en/modules/ROOT/pages/index.adoc` : version anglaise.
+`content/home-en/modules/ROOT/pages/index.adoc`: the English version.
 
-## Étape 4 — UI bundle XIXᵉ siècle
+## Step 4 — 19th-century UI bundle
 
-### Typographie (auto-hébergées dans le bundle, **pas** de Google Fonts en CDN)
+### Typography (self-hosted in the bundle, **no** Google Fonts over CDN)
 
-- Corps : **EB Garamond** (sérif Renaissance)
-- Titres : **Cormorant Garamond** ou **Playfair Display**
-- Mono : **JetBrains Mono** ou **IBM Plex Mono**
-- Sous-set latin + latin-ext (couvre FR et EN), woff2 uniquement
-- Ligatures + chiffres elzéviriens activés : `font-feature-settings: "liga", "onum"`
-- Petites capitales pour les titres de sections
-- Numérotation des chapitres en chiffres romains dans la nav (helper `roman`)
+- Body: **EB Garamond** (Renaissance serif)
+- Headings: **Cormorant Garamond** or **Playfair Display**
+- Mono: **JetBrains Mono** or **IBM Plex Mono**
+- latin + latin-ext subset (covers FR and EN), woff2 only
+- Ligatures + old-style figures enabled: `font-feature-settings: "liga", "onum"`
+- Small caps for section titles
+- Chapter numbering in Roman numerals in the nav (`roman` helper)
 
 ### Palette
 
@@ -286,90 +286,90 @@ asciidoc:
 --ochre:      #a07020;
 --rule:       #c9b896;
 
-/* mode sombre = encre sur parchemin ambré, pas un dark IDE */
+/* dark mode = ink on amber parchment, not a dark IDE */
 --dark-ink:    #e8dcc4;
 --dark-paper:  #1a1410;
 --dark-cream:  #2a201a;
 ```
 
-Liens en bordeaux, soulignés finement (`text-decoration-thickness: 1px; text-underline-offset: 0.2em`).
+Links in burgundy, finely underlined (`text-decoration-thickness: 1px; text-underline-offset: 0.2em`).
 
 ### Layout
 
-- `max-width: 38rem` sur le contenu (≈70 caractères)
+- `max-width: 38rem` on the content (≈70 characters)
 - `line-height: 1.7`
-- Marges généreuses
-- Nav latérale fine en sérif
-- Header minimal : monogramme + titre + sélecteur de version + sélecteur de component + **toggle FR/EN**
-- Toggle clair/sombre persistant (localStorage)
+- Generous margins
+- A slim serif side navigation
+- Minimal header: monogram + title + version selector + component selector + **FR/EN toggle**
+- Persistent light/dark toggle (localStorage)
 
-### Toggle de langue
+### Language toggle
 
-Dans le header, un toggle `FR | EN`. Logique :
+In the header, an `FR | EN` toggle. Logic:
 
-- Chaque page connaît son component (`vauban` ou `vauban-fr`).
-- Le toggle calcule l'URL homologue : si on est sur `/vauban/page.html`, le toggle pointe vers `/vauban-fr/page.html`, et inversement. Pour `home` ↔ `home-fr` même règle.
-- Si la page homologue n'existe pas (404), on retombe sur l'`index` du component cible.
-- La langue préférée est persistée en localStorage et appliquée à la navigation suivante.
-- L'attribut `<html lang="...">` est positionné à partir de l'attribut Asciidoc `lang` du component.
+- Each page knows its component (`vauban` or `vauban-fr`).
+- The toggle computes the counterpart URL: if you are on `/vauban/page.html`, the toggle points to `/vauban-fr/page.html`, and vice versa. Same rule for `home` ↔ `home-fr`.
+- If the counterpart page does not exist (404), fall back to the target component's `index`.
+- The preferred language is persisted in localStorage and applied to the next navigation.
+- The `<html lang="...">` attribute is set from the component's `lang` Asciidoc attribute.
 
-Implémentation en vanilla JS, ~30 lignes max.
+Implemented in vanilla JS, ~30 lines max.
 
-### Éléments graphiques (SVG inline uniquement)
+### Graphic elements (inline SVG only)
 
-- **Monogramme V** entrelacé en SVG (~300 octets de path), style chiffre royal sobre
-- **Filets décoratifs** ornés (`<hr class="ornament">`), motif point-trait-losange-trait-point, monochrome ocre
-- **Lettrines** sur le premier paragraphe des `index.adoc` de chaque component, via CSS `::first-letter`
-- **Admonitions stylées comme des cachets** :
-  - `CAUTION` / `WARNING` : sceau bordeaux + bordure gauche bordeaux 3px
-  - `NOTE` : filet ocre fin
-  - `TIP` : étoile à 8 branches ocre
-  - `IMPORTANT` : double filet bordeaux
-- **Footer** : deux bras articulés du télégraphe Chappe en SVG simplifié (un mât + deux traits)
+- An interlaced **V monogram** in SVG (~300 bytes of path), in the style of a sober royal cypher
+- Ornate **decorative rules** (`<hr class="ornament">`), dot-dash-lozenge-dash-dot motif, monochrome ochre
+- **Drop caps** on the first paragraph of each component's `index.adoc`, via the CSS `::first-letter`
+- **Admonitions styled as seals**:
+  - `CAUTION` / `WARNING`: burgundy seal + 3px burgundy left border
+  - `NOTE`: thin ochre rule
+  - `TIP`: 8-pointed ochre star
+  - `IMPORTANT`: double burgundy rule
+- **Footer**: the two articulated arms of the Chappe telegraph as simplified SVG (one mast + two strokes)
 
-### Layouts Handlebars
+### Handlebars layouts
 
 - `default.hbs`, `home.hbs`
-- Partials : `head.hbs`, `header.hbs`, `nav.hbs`, `footer.hbs`, `toolbar.hbs`, `pagination.hbs`, `language-toggle.hbs`
+- Partials: `head.hbs`, `header.hbs`, `nav.hbs`, `footer.hbs`, `toolbar.hbs`, `pagination.hbs`, `language-toggle.hbs`
 
-### Helpers Handlebars
+### Handlebars helpers
 
-- `roman` : nombre → chiffres romains
-- `chappeVersion` : lit `data/versions.json`
-- `i18n` : retourne une chaîne traduite selon la langue courante (libellés du chrome : « Sur cette page », « Éditer », « Version », « Langue »…)
+- `roman`: number → Roman numerals
+- `chappeVersion`: reads `data/versions.json`
+- `i18n`: returns a string translated according to the current language (chrome labels: "Sur cette page", "Éditer", "Version", "Langue"…)
 
-### Build du bundle
+### Building the bundle
 
-`gulpfile.js` qui :
+A `gulpfile.js` that:
 
-1. Compile `src/css/*.css` (PostCSS + autoprefixer + cssnano) → `build/ui/css/site.css`
-2. Bundle `src/js/*.js` → `build/ui/js/site.js` (concat simple, pas de Webpack)
-3. Copie layouts/partials/helpers/img/data + fonts woff2 → `build/ui/`
-4. Zippe `build/ui/` → `build/ui-bundle.zip`
+1. Compiles `src/css/*.css` (PostCSS + autoprefixer + cssnano) → `build/ui/css/site.css`
+2. Bundles `src/js/*.js` → `build/ui/js/site.js` (plain concatenation, no Webpack)
+3. Copies layouts/partials/helpers/img/data + woff2 fonts → `build/ui/`
+4. Zips `build/ui/` → `build/ui-bundle.zip`
 
-`package.json` : `npm run build` → `node ../scripts/fetch-chappe-version.js && gulp bundle`. Poids cible : **CSS + JS + fonts < 200 Ko gzipped total**.
+`package.json`: `npm run build` → `node ../scripts/fetch-chappe-version.js && gulp bundle`. Target weight: **CSS + JS + fonts < 200 KB gzipped in total**.
 
-## Étape 5 — Version de Chappe dans le footer
+## Step 5 — Chappe's version in the footer
 
-Footer affiché :
+Footer as displayed:
 
 ```
 Propulsé par Chappe X.Y.Z[-SNAPSHOT]* · Documentation Vidocq · Apache 2.0 · MMXXVI
 ```
 
-Version anglaise :
+English version:
 
 ```
 Powered by Chappe X.Y.Z[-SNAPSHOT]* · Vidocq Documentation · Apache 2.0 · MMXXVI
 ```
 
-Si la version contient `-SNAPSHOT`, ajouter un astérisque ocre `*` avec `title` traduit. Année courante en chiffres romains via le helper `roman`.
+If the version contains `-SNAPSHOT`, add an ochre asterisk `*` with a translated `title`. Current year in Roman numerals through the `roman` helper.
 
-`scripts/fetch-chappe-version.js` :
+`scripts/fetch-chappe-version.js`:
 
-1. **Local** : lit `../chappe/pom.xml`, extrait le premier `<version>` racine.
-2. **CI** : si `../chappe/pom.xml` absent, `curl https://forge.vidocq.dev/vidocq/chappe/raw/branch/main/pom.xml`.
-3. Écrit `ui-bundle/src/data/versions.json` :
+1. **Local**: read `../chappe/pom.xml`, extract the first root `<version>`.
+2. **CI**: if `../chappe/pom.xml` is absent, `curl https://forge.vidocq.dev/vidocq/chappe/raw/branch/main/pom.xml`.
+3. Write `ui-bundle/src/data/versions.json`:
 
    ```json
    {
@@ -379,25 +379,25 @@ Si la version contient `-SNAPSHOT`, ajouter un astérisque ocre `*` avec `title`
    }
    ```
 
-Appelé avant chaque build.
+Called before every build.
 
-## Étape 6 — Servir le site avec Chappe
+## Step 6 — Serving the site with Chappe
 
-D'abord, **inspecte le repo `chappe`** pour déterminer :
+First, **inspect the `chappe` repo** to determine:
 
-1. La méthode canonique de packaging (fat jar, native image GraalVM, distribution `.tar.gz`, image Docker pré-publiée ?)
-2. La CLI ou le fichier de configuration pour servir un répertoire statique
-3. Le format des cache headers, gzip, fallback
-4. Le port d'écoute par défaut
-5. Comment ajouter un header conditionnel type `X-Robots-Tag: noindex`
+1. The canonical packaging method (fat jar, GraalVM native image, `.tar.gz` distribution, pre-published Docker image?)
+2. The CLI or configuration file for serving a static directory
+3. The format of the cache headers, gzip, fallback
+4. The default listening port
+5. How to add a conditional header such as `X-Robots-Tag: noindex`
 
-S'il existe **déjà** un Dockerfile dans `chappe/` ou une image publiée sur `forge.vidocq.dev/vidocq/chappe`, **utilise-le comme base**. Sinon, build Chappe depuis les sources dans le multi-stage.
+If a Dockerfile **already** exists in `chappe/`, or an image published on `forge.vidocq.dev/vidocq/chappe`, **use it as the base**. Otherwise, build Chappe from source in the multi-stage.
 
-`Dockerfile` cible (à adapter selon ce que tu trouves) :
+Target `Dockerfile` (to be adapted to what you find):
 
 ```dockerfile
 # ------------------------------------------------------------------
-# Stage 1 — Build du site Antora
+# Stage 1 — Building the Antora site
 # ------------------------------------------------------------------
 FROM node:lts-alpine AS site-builder
 WORKDIR /build
@@ -408,12 +408,12 @@ RUN cd ui-bundle && npm run build
 RUN npx antora antora-playbook.yml
 
 # ------------------------------------------------------------------
-# Stage 2 — Build de Chappe (si pas d'image publiée)
+# Stage 2 — Building Chappe (if there is no published image)
 # ------------------------------------------------------------------
-# OU bien : FROM forge.vidocq.dev/vidocq/chappe:0.1.0-SNAPSHOT AS chappe-runtime
-# (selon ce que tu trouves dans le repo chappe)
+# OR: FROM forge.vidocq.dev/vidocq/chappe:0.1.0-SNAPSHOT AS chappe-runtime
+# (depending on what you find in the chappe repo)
 FROM eclipse-temurin:25-jdk-alpine AS chappe-builder
-# ... à compléter d'après l'inspection de chappe ...
+# ... to be completed from the inspection of chappe ...
 
 # ------------------------------------------------------------------
 # Stage 3 — Runtime
@@ -436,15 +436,15 @@ HEALTHCHECK --interval=30s --timeout=3s CMD wget -qO- http://localhost:8080/ || 
 ENTRYPOINT ["chappe", "serve", "--config", "/etc/chappe/config.yml"]
 ```
 
-Crée également `chappe-config.yml` à la racine du repo `vidocq-docs` avec les directives correctes (cache, gzip, fallback, robots) selon ce que Chappe attend.
+Also create `chappe-config.yml` at the root of the `vidocq-docs` repo with the correct directives (cache, gzip, fallback, robots) according to what Chappe expects.
 
-**Dogfooding** : Si Chappe n'a pas encore les directives requises (cache headers fins, fallback configurable, `X-Robots-Tag` conditionnel…), liste-les dans `NOTES.md` sous une section `## Issues à ouvrir sur chappe`, formatées en markdown prêt à coller. Je créerai les issues moi-même. C'est un excellent driver pour finir Chappe.
+**Dogfooding**: if Chappe does not yet have the required directives (fine-grained cache headers, configurable fallback, conditional `X-Robots-Tag`…), list them in `NOTES.md` under an `## Issues à ouvrir sur chappe` section, formatted as ready-to-paste markdown. I will create the issues myself. It is an excellent driver for finishing Chappe.
 
-Pour le `noindex` sur staging : passer `STAGING=true` à Chappe. Si la mécanique exacte n'est pas claire, propose une convention (variable d'env, clé de config, header injecté).
+For `noindex` on staging: pass `STAGING=true` to Chappe. If the exact mechanism is unclear, propose a convention (env variable, config key, injected header).
 
-## Étape 7 — Workflow Forgejo
+## Step 7 — Forgejo workflow
 
-`.forgejo/workflows/build.yml` :
+`.forgejo/workflows/build.yml`:
 
 ```yaml
 on:
@@ -497,86 +497,86 @@ jobs:
           fi
 ```
 
-Adapte la syntaxe Forgejo Actions exacte si tu connais des particularités locales.
+Adapt the exact Forgejo Actions syntax if you know of local particularities.
 
-## Étape 8 — Documentation du projet docs lui-même
+## Step 8 — Documenting the docs project itself
 
-`README.adoc` :
+`README.adoc`:
 
-- Présentation
-- Pré-requis (Node LTS, Antora 3.x, accès aux clones frères pour le build local)
-- `npm run build:local` (UI + playbook locale)
-- Comment ajouter un nouveau component (créer `docs/en/` et `docs/fr/` dans le nouveau repo, ajouter une source dans la playbook)
-- Comment contribuer à la doc d'un module existant (PR sur le repo du module, pas ici)
-- Note : ce repo contient **uniquement** la playbook, le UI et l'orchestration. Le contenu vit dans chaque repo module.
+- Presentation
+- Prerequisites (Node LTS, Antora 3.x, access to the sibling clones for the local build)
+- `npm run build:local` (UI + local playbook)
+- How to add a new component (create `docs/en/` and `docs/fr/` in the new repo, add a source to the playbook)
+- How to contribute to an existing module's docs (PR on the module's repo, not here)
+- Note: this repo contains **only** the playbook, the UI and the orchestration. The content lives in each module repo.
 
-`docs/adr/0001-antora-multi-component.md` (MADR) : Antora vs MkDocs/Docusaurus/Hugo, multi-repo doc, justifications.
+`docs/adr/0001-antora-multi-component.md` (MADR): Antora vs MkDocs/Docusaurus/Hugo, multi-repo docs, rationale.
 
-`docs/adr/0002-bilingual-fr-en.md` (MADR) : composants parallèles `<module>` et `<module>-fr`, FR canonique, EN traduction, alternatives écartées (Antora i18n expérimental, fork par langue, sous-domaines `fr.docs.vidocq.dev`).
+`docs/adr/0002-bilingual-fr-en.md` (MADR): parallel `<module>` and `<module>-fr` components, FR canonical, EN translated, alternatives rejected (experimental Antora i18n, one fork per language, `fr.docs.vidocq.dev` sub-domains).
 
-## Étape 9 — Git, sur 6 repos
+## Step 9 — Git, across 6 repos
 
-Pour chaque repo module (`vidocq`, `vauban`, `cassini`, `champollion`, `chappe`) :
+For each module repo (`vidocq`, `vauban`, `cassini`, `champollion`, `chappe`):
 
 ```bash
 cd <module>
 git checkout -b docs/initial-bootstrap
 git add docs/
 git commit -m "docs: bootstrap bilingual documentation (en/fr)"
-# PAS DE PUSH
+# NO PUSH
 cd ..
 ```
 
-Pour `vidocq-docs/` :
+For `vidocq-docs/`:
 
 ```bash
 mkdir vidocq-docs && cd vidocq-docs
 git init -b main
-# .gitignore : node_modules/, build/, public/, .cache/, *.zip, NOTES.md, ui-bundle/build/
+# .gitignore: node_modules/, build/, public/, .cache/, *.zip, NOTES.md, ui-bundle/build/
 git add .
-git commit -m "chore: bootstrap vidocq-docs (Antora + UI XIXᵉ + Chappe)
+git commit -m "chore: bootstrap vidocq-docs (Antora + 19th-century UI + Chappe)
 
 - Antora multi-component playbook (5 modules + home), bilingual FR/EN
-- UI bundle: EB Garamond, palette parchemin/bordeaux, dark mode, language toggle
+- UI bundle: EB Garamond, parchment/burgundy palette, dark mode, language toggle
 - Footer with dynamically extracted Chappe version
 - Dockerfile multi-stage serving via Chappe
 - Forgejo Actions: build + push + Portainer webhooks
 - ADR-0001 (Antora), ADR-0002 (bilingual)"
 git remote add origin ssh://git@forge.vidocq.dev:55122/vidocq/vidocq-docs.git
-# PAS DE PUSH
+# NO PUSH
 ```
 
-## Compte rendu attendu
+## Expected report
 
-À la fin, donne-moi :
+At the end, give me:
 
-1. Arborescence finale des 6 repos touchés (uniquement les répertoires/fichiers ajoutés)
-2. Pour chaque repo, le hash du commit local et la branche
-3. Ce qui builde de bout en bout vs ce qui est marqué TODO
-4. Le résultat de l'inspection de Chappe (méthode de packaging retenue, manques éventuels)
-5. Découvertes intéressantes pendant l'inspection des modules (API absentes, versions, surprises)
-6. Commandes pour tester localement :
+1. The final tree of the 6 repos touched (only the directories/files added)
+2. For each repo, the local commit hash and the branch
+3. What builds end to end vs what is marked TODO
+4. The result of the Chappe inspection (packaging method chosen, any gaps)
+5. Interesting discoveries during the module inspection (missing APIs, versions, surprises)
+6. Commands to test locally:
    - `cd vidocq-docs/ui-bundle && npm install && npm run build && cd ..`
    - `npx antora antora-playbook-local.yml`
    - `docker build -t vidocq-docs:test .`
    - `docker run -p 8080:8080 vidocq-docs:test`
-7. Liste ordonnée de ce que je dois faire avant de pousser
-8. Issues à ouvrir côté `chappe` si tu as identifié des manques (formate-les en markdown prêt à coller)
+7. An ordered list of what I must do before pushing
+8. Issues to open on the `chappe` side if you identified gaps (format them as ready-to-paste markdown)
 
-Supprime `vidocq-docs/NOTES.md` une fois le compte rendu fait.
+Delete `vidocq-docs/NOTES.md` once the report is done.
 
-## Garde-fous
+## Guardrails
 
-- **Aucun push, sur aucun repo.** Six repos = six commits locaux qui m'attendent.
-- **Refus si état git sale.** Si un module a des changements non committés, arrête-toi et signale.
-- **Refus si `docs/` préexiste** dans un module — signale et attends mes instructions.
-- **Pas d'invention.** `[TODO]` plutôt qu'une signature fictive.
-- **Pas d'IA-art.** Tout visuel décoratif est SVG vectoriel inline ou typographie.
-- **Pas de Tailwind, pas de framework JS lourd.** CSS écrit à la main, vanilla JS minimal.
-- **Pas de Google Fonts en CDN.** Auto-héberge en woff2 dans le UI bundle.
-- **Pas de tracking, pas d'analytics.**
-- **Pas de `npm audit fix --force` automatique** — signale, je décide.
-- **Bilingue strict** : FR canonique, EN traduit, contenu complet dans les deux langues même si c'est un `[TODO]`. Pas de page qui n'existe que dans une langue.
-- **Cohérence des liens xref** : tous les xref entre pages utilisent `<component>::page.adoc`. Le toggle de langue se charge de basculer le component.
+- **No push, on any repo.** Six repos = six local commits waiting for me.
+- **Refuse if the git state is dirty.** If a module has uncommitted changes, stop and report.
+- **Refuse if `docs/` already exists** in a module — report and wait for my instructions.
+- **No invention.** `[TODO]` rather than a fictitious signature.
+- **No AI art.** Every decorative visual is inline vector SVG or typography.
+- **No Tailwind, no heavy JS framework.** Hand-written CSS, minimal vanilla JS.
+- **No Google Fonts over CDN.** Self-host as woff2 in the UI bundle.
+- **No tracking, no analytics.**
+- **No automatic `npm audit fix --force`** — report it, I decide.
+- **Strictly bilingual**: FR canonical, EN translated, complete content in both languages even if it is a `[TODO]`. No page that exists in only one language.
+- **Consistent xref links**: every xref between pages uses `<component>::page.adoc`. The language toggle takes care of switching the component.
 
-Au boulot.
+Get to work.
