@@ -17,6 +17,12 @@ projects:
     desc: Antora documentation site (bilingual FR/EN)
     tags: [docs]
 
+  pages:
+    path: pages/main
+    url: git@codeberg.org:Vidocq/pages.git
+    desc: Codeberg Pages site (published from the pages branch)
+    tags: [docs, pages]
+
   ci:
     path: ci/main
     url: git@codeberg.org:Vidocq/ci.git
