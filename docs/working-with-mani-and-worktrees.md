@@ -83,7 +83,67 @@ git worktree remove ../feature/123-foo                        # when done
 ```
 
 Branch names with slashes create nested dirs (`vauban/feature/123-foo/`) — the
-directory still mirrors the branch name.
+directory still mirrors the branch name. Note the consequence: **a checkout's
+depth below the workspace root is not constant** — `main/` sits one level under
+`<repo>/`, `fix/mani-layout-paths/` two. Anything that depends on that depth
+breaks; see the exemptions below.
+
+## Exemptions
+
+> **Rule:** the plain convention holds unless a checkout's filesystem *location*
+> is part of the repo's contract — because it **contains** the other repos, or
+> because it **reaches outside itself by relative path**. The first case rules
+> worktrees out entirely; the second only rules out *nesting*.
+
+Two repos qualify today, in the two different ways:
+
+### 1. No worktrees at all — vidocq-workspace (this repo)
+
+It *is* the container. A worktree of it is an empty shell in which `mani.yaml`'s
+`<repo>/main` paths resolve to nothing, so `mani sync` there clones all 19
+projects a second time — a duplicate workspace that drifts from the real one.
+Work on branches in place:
+
+```bash
+git switch -c feature/123-foo     # in the workspace root, no worktree
+```
+
+The workspace repo is not a mani project, so nothing can intercept a manual
+`git worktree add` here — just don't. If you truly need two branches at once,
+clone the workspace repo elsewhere instead.
+
+### 2. Flat worktrees only — vidocq-docs
+
+`antora-playbook-local.yml` reaches the sibling repos by relative path
+(`../../vauban/main`), so what matters is **depth, not the name `main`**. A
+worktree is fine as long as it sits at the same level as `main/` — which means
+the directory name must not contain a slash:
+
+| checkout | depth below `vidocq-docs/` | `../../vauban/main` resolves to |
+|---|---|---|
+| `vidocq-docs/main/` | 1 | `<workspace>/vauban/main` ✅ |
+| `vidocq-docs/fix-mani-layout-paths/` | 1 | `<workspace>/vauban/main` ✅ |
+| `vidocq-docs/fix/mani-layout-paths/` | 2 | `<workspace>/vidocq-docs/vauban/main` ❌ |
+
+So the workspace convention "directory name equals branch name" is **relaxed
+here to a flattened name**: `fix/foo` → `fix-foo`. `mani run wt-add` does this
+for you — such projects carry the `flat-worktree` tag in `mani.yaml`:
+
+```bash
+$ BRANCH=fix/foo mani run wt-add -p vidocq-docs
+note: 'vidocq-docs' is flat-worktree — using directory 'fix-foo' (not 'fix/foo')
+worktree: <workspace>/vidocq-docs/fix-foo  (branch fix/foo)
+```
+
+The branch itself keeps its normal slashed name; only the directory is flattened.
+
+Failure here is silent rather than loud — Antora finds no content at the wrong
+paths and cheerfully builds a site with every component page missing. vidocq-docs
+therefore ships `scripts/check-local-layout.sh`, wired as npm `prebuild`, which
+fails the build with an explicit message when the invariant is broken.
+
+To make a further repo flat-worktree, add the tag to its `tags:` in `mani.yaml`
+and note the reason above.
 
 ## IntelliJ
 
@@ -120,3 +180,29 @@ mani run -a install-hooks             # re-point each repo's hooks at the shared
 Do this only when no repo has an in-flight push/PR tied to its old path. (A
 single repo, by hand: `mv vauban vauban.tmp && mkdir vauban && mv vauban.tmp
 vauban/main`.)
+
+### Moving a clone (or the workspace root) breaks its worktrees
+
+Worktree links are **absolute paths recorded on both sides** — `.git/worktrees/<name>/gitdir`
+in the clone, and the `.git` *file* inside the worktree. Moving either end leaves
+them dangling: `git worktree list` marks the entry `prunable` and commands inside
+the worktree fail with `fatal: not a git repository`. The directory contents are
+untouched, so nothing is lost — but do **not** run `git worktree prune`, which
+just forgets them.
+
+Repair instead, from each clone, passing the worktrees' *new* paths:
+
+```bash
+# from the workspace root — repair every moved worktree in every project:
+for c in */main; do
+  find "${c%/main}" -mindepth 2 -maxdepth 3 -name .git -type f \
+    | sed 's|/\.git$||' | while read -r wt; do
+        git -C "$c" worktree repair "$PWD/$wt"
+      done
+done
+git worktree list   # per repo: no 'prunable' entries left
+```
+
+This is exactly what happened when the workspace repo itself was migrated into
+`main/`: 14 project worktrees were silently orphaned. It is also the second
+reason the workspace repo is worktree-exempt.

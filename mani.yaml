@@ -15,7 +15,11 @@ projects:
     path: vidocq-docs/main
     url: git@codeberg.org:Vidocq/vidocq-docs.git
     desc: Antora documentation site (bilingual FR/EN)
-    tags: [docs]
+    # flat-worktree: antora-playbook-local.yml reaches sibling repos by relative
+    # path (../../<repo>/main), so every checkout must sit exactly one level
+    # under vidocq-docs/ — worktree dirs are flattened (fix/foo -> fix-foo).
+    # See docs/working-with-mani-and-worktrees.md, section "Exemptions".
+    tags: [docs, flat-worktree]
 
   pages:
     path: pages/main
@@ -241,9 +245,22 @@ tasks:
     cmd: |
       : "${BRANCH:?set BRANCH=<branch-name>}"
       base="${BASE:-main}"
-      if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
-        git worktree add "../$BRANCH" "$BRANCH"
-      else
-        git worktree add -b "$BRANCH" "../$BRANCH" "$base"
+      project=$(basename "$(dirname "$PWD")")
+      dir="$BRANCH"
+      # Projects tagged 'flat-worktree' reach outside themselves by relative
+      # path, so every checkout must stay at the same depth as main/ — the
+      # branch name is flattened into a single directory level.
+      if mani list projects -t flat-worktree --headers project --color=false 2>/dev/null \
+         | grep -qE "^[[:space:]]*${project}[[:space:]]*$"; then
+        dir=$(printf '%s' "$BRANCH" | tr '/' '-')
+        if [ "$dir" != "$BRANCH" ]; then
+          echo "note: '$project' is flat-worktree — using directory '$dir' (not '$BRANCH')"
+          echo "      see docs/working-with-mani-and-worktrees.md — 'Exemptions'"
+        fi
       fi
-      echo "worktree: $(cd "../$BRANCH" && pwd)  (branch $BRANCH)"
+      if git show-ref --verify --quiet "refs/heads/$BRANCH"; then
+        git worktree add "../$dir" "$BRANCH"
+      else
+        git worktree add -b "$BRANCH" "../$dir" "$base"
+      fi
+      echo "worktree: $(cd "../$dir" && pwd)  (branch $BRANCH)"
