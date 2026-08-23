@@ -43,7 +43,7 @@ Cross-cutting rules that apply to **all** sub-projects, unless an explicitly doc
 - **Mandatory TDD** — write the test (or the TCK scenario) before the code. Red → green → refactor.
 - **Arquillian** for the official Jakarta TCKs and any integration test requiring a container.
 - **Virtual Threads** everywhere for I/O — `Executors.newVirtualThreadPerTaskExecutor()` by default, no platform-thread pool without a documented reason.
-- **Code language is English** — all Javadoc and all comments (`//`, `/* */`, `/** */`) are written in **English**, as are symbol, test, and method names. **French** is reserved for the **Antora documentation** (`<sub-project>/docs/fr/`) and steering files (`tasks/`, agent prompts). Exchanges with the maintainer remain in French.
+- **Code language is English** — all Javadoc and all comments (`//`, `/* */`, `/** */`) are written in **English**, as are symbol, test, and method names. The **Antora documentation is English-only** (vidocq-docs ADR 0004 — the `docs/fr/` mirrors were removed). Exchanges with the maintainer remain in French.
 
 ## Bug & performance traceability
 
