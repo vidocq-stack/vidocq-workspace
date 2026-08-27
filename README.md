@@ -36,7 +36,7 @@ submodules.
 
 1. Clone this repo as your workspace directory:
    ```bash
-   git clone git@codeberg.org:Vidocq/vidocq-workspace.git vidocq && cd vidocq
+   git clone git@codefloe.com:Vidocq/vidocq-workspace.git vidocq && cd vidocq
    ```
 2. Install [mani](https://github.com/alajmo/mani) and populate the project repos:
    ```bash

@@ -1,19 +1,19 @@
 projects:
   vidocq:
     path: vidocq/main
-    url: git@codeberg.org:Vidocq/vidocq.git
+    url: git@codefloe.com:Vidocq/vidocq.git
     desc: Vidocq orchestrator (main runtime)
     tags: [module, runtime, code]
 
   vidocq-parent:
     path: vidocq-parent/main
-    url: git@codeberg.org:Vidocq/vidocq-parent.git
+    url: git@codefloe.com:Vidocq/vidocq-parent.git
     desc: Parent POM for all Vidocq modules
     tags: [parent, code]
 
   vidocq-docs:
     path: vidocq-docs/main
-    url: git@codeberg.org:Vidocq/vidocq-docs.git
+    url: git@codefloe.com:Vidocq/vidocq-docs.git
     desc: Antora documentation site (bilingual FR/EN)
     # flat-worktree: antora-playbook-local.yml reaches sibling repos by relative
     # path (../../<repo>/main), so every checkout must sit exactly one level
@@ -23,97 +23,97 @@ projects:
 
   pages:
     path: pages/main
-    url: git@codeberg.org:Vidocq/pages.git
+    url: git@codefloe.com:Vidocq/pages.git
     desc: Codeberg Pages site (published from the pages branch)
     tags: [docs, pages]
 
   ci:
     path: ci/main
-    url: git@codeberg.org:Vidocq/ci.git
+    url: git@codefloe.com:Vidocq/ci.git
     desc: CI configuration and pipelines
     tags: [ci]
 
   vauban:
     path: vauban/main
-    url: git@codeberg.org:Vidocq/vauban.git
+    url: git@codefloe.com:Vidocq/vauban.git
     desc: CDI implementation
     tags: [module, code]
 
   cassini:
     path: cassini/main
-    url: git@codeberg.org:Vidocq/cassini.git
+    url: git@codefloe.com:Vidocq/cassini.git
     desc: REST implementation
     tags: [module, code]
 
   champollion:
     path: champollion/main
-    url: git@codeberg.org:Vidocq/champollion.git
+    url: git@codefloe.com:Vidocq/champollion.git
     desc: JSON implementation
     tags: [module, code]
 
   chappe:
     path: chappe/main
-    url: git@codeberg.org:Vidocq/chappe.git
+    url: git@codefloe.com:Vidocq/chappe.git
     desc: HTTP implementation
     tags: [module, code]
 
   foy:
     path: foy/main
-    url: git@codeberg.org:Vidocq/foy.git
+    url: git@codefloe.com:Vidocq/foy.git
     desc: Servlet implementation
     tags: [module, code]
 
   mansart:
     path: mansart/main
-    url: git@codeberg.org:Vidocq/mansart.git
+    url: git@codefloe.com:Vidocq/mansart.git
     desc: Data implementation
     tags: [module, code]
 
   ravel:
     path: ravel/main
-    url: git@codeberg.org:Vidocq/ravel.git
+    url: git@codefloe.com:Vidocq/ravel.git
     desc: Config implementation
     tags: [module, code]
 
   knock:
     path: knock/main
-    url: git@codeberg.org:Vidocq/knock.git
+    url: git@codefloe.com:Vidocq/knock.git
     desc: Health implementation
     tags: [module, code]
 
   dirac:
     path: dirac/main
-    url: git@codeberg.org:Vidocq/dirac.git
+    url: git@codefloe.com:Vidocq/dirac.git
     desc: Metrics implementation
     tags: [module, code]
 
   heisenberg:
     path: heisenberg/main
-    url: git@codeberg.org:Vidocq/heisenberg.git
+    url: git@codefloe.com:Vidocq/heisenberg.git
     desc: Fault Tolerance implementation
     tags: [module, code]
 
   cervantes:
     path: cervantes/main
-    url: git@codeberg.org:Vidocq/cervantes.git
+    url: git@codefloe.com:Vidocq/cervantes.git
     desc: JWT implementation
     tags: [module, code]
 
   cyrano:
     path: cyrano/main
-    url: git@codeberg.org:Vidocq/cyrano.git
+    url: git@codefloe.com:Vidocq/cyrano.git
     desc: REST Client implementation
     tags: [module, code]
 
   humboldt:
     path: humboldt/main
-    url: git@codeberg.org:Vidocq/humboldt.git
+    url: git@codefloe.com:Vidocq/humboldt.git
     desc: Telemetry implementation
     tags: [module, code]
 
   grimm:
     path: grimm/main
-    url: git@codeberg.org:Vidocq/grimm.git
+    url: git@codefloe.com:Vidocq/grimm.git
     desc: OpenAPI implementation
     tags: [module, code]
 
