@@ -33,6 +33,12 @@ projects:
     desc: CI configuration and pipelines
     tags: [ci]
 
+  governance:
+    path: governance/main
+    url: git@codefloe.com:Vidocq/governance.git
+    desc: Governance configuration and processes
+    tags: [governance]
+
   vauban:
     path: vauban/main
     url: git@codefloe.com:Vidocq/vauban.git
