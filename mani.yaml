@@ -123,6 +123,12 @@ projects:
     desc: OpenAPI implementation
     tags: [module, code]
 
+  erasmus:
+    path: erasmus/main
+    url: git@codefloe.com:Vidocq/erasmus.git
+    desc: Bean Validation implementation
+    tags: [module, code]
+
 specs:
   parallel:
     output: table
