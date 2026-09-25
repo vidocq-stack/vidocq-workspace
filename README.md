@@ -81,6 +81,6 @@ traceability policy. Each sub-project additionally ships its own `CLAUDE.md`.
   absolute paths, no machine-specific entries, **no secrets**. Reviewed like code.
 - **`.claude/settings.local.json`** — *personal*, per-machine. **Git-ignored.**
   Put your own permission grants here; they never get shared.
-- **Secrets** (Codeberg/Forgejo tokens, etc.) live only in
+- **Secrets** (Codefloe/Forgejo tokens, etc.) live only in
   `~/.config/vidocq/tokens.env` — **never** in this repo. The `.gitignore` and a
   `deny` rule in `settings.json` guard against committing/reading them here.

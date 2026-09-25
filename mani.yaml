@@ -24,7 +24,7 @@ projects:
   pages:
     path: pages/main
     url: git@codefloe.com:Vidocq/pages.git
-    desc: Codeberg Pages site (published from the pages branch)
+    desc: vidocq.dev site (Roq, deployed to Cloudflare Pages)
     tags: [docs, pages]
 
   ci:

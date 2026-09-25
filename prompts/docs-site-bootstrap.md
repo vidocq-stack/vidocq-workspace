@@ -12,7 +12,7 @@
 >   flat siblings. So `cd <module>`, the `vidocq-docs/` creation step and the local
 >   playbook's `url: ../vidocq` no longer resolve as written — see
 >   [the mani and worktrees guide](../docs/working-with-mani-and-worktrees.md).
-> - **Forge.** Hosting moved from `forge.vidocq.dev` to `codeberg.org/Vidocq`, so the
+> - **Forge.** Hosting moved from `forge.vidocq.dev` to `codeberg.org/Vidocq`, then to `codefloe.com/Vidocq`, so the
 >   remote URLs and the `fetch-chappe-version.js` fallback URL below are stale.
 
 You are going to create a documentation system for the Vidocq suite. You are in a directory that contains the clones of the suite's projects. You will:
