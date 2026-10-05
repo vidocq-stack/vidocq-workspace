@@ -41,6 +41,7 @@ tokens*.env
 !/prompts/
 
 # mani #
+erasmus/main
 grimm/main
 humboldt/main
 cyrano/main
