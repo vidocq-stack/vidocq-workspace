@@ -14,7 +14,7 @@ projects:
   vidocq-docs:
     path: vidocq-docs/main
     url: git@codefloe.com:Vidocq/vidocq-docs.git
-    desc: Antora documentation site (bilingual FR/EN)
+    desc: Antora documentation site (English-only, vidocq-docs ADR 0004)
     # flat-worktree: antora-playbook-local.yml reaches sibling repos by relative
     # path (../../<repo>/main), so every checkout must sit exactly one level
     # under vidocq-docs/ — worktree dirs are flattened (fix/foo -> fix-foo).
@@ -127,6 +127,18 @@ projects:
     path: erasmus/main
     url: git@codefloe.com:Vidocq/erasmus.git
     desc: Bean Validation implementation
+    tags: [module, code]
+
+  peano:
+    path: peano/main
+    url: git@codefloe.com:Vidocq/peano.git
+    desc: Expression Language implementation
+    tags: [module, code]
+
+  ibarra:
+    path: ibarra/main
+    url: git@codefloe.com:Vidocq/ibarra.git
+    desc: Pages implementation
     tags: [module, code]
 
 specs:

@@ -5,7 +5,7 @@ description: Append a new bug entry to the BUG.md of the current Vidocq sub-proj
 
 # log-bug
 
-Append a bug entry to `<sub-project>/BUG.md` following the Vidocq convention defined in the root `CLAUDE.md`.
+Append a bug entry to `<sub-project>/BUG.md` following the Vidocq convention defined in the root `AGENTS.md`.
 
 ## When to invoke
 
@@ -44,7 +44,7 @@ Append a bug entry to `<sub-project>/BUG.md` following the Vidocq convention def
    ```markdown
    # BUG.md — <sub-project>
 
-   Suivi des bugs reproductibles. Convention : voir `../CLAUDE.md` (workspace root).
+   Suivi des bugs reproductibles. Convention : voir `vidocq-workspace/AGENTS.md` (workspace root).
 
    Statuts : `OPEN` → `INVESTIGATING` → `FIXED` (commit hash) → `CLOSED`.
 

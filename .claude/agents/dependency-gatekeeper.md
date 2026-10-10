@@ -8,7 +8,7 @@ You gatekeep dependency changes in the Vidocq ecosystem.
 
 ## Mandate
 
-The Vidocq philosophy is **zéro ou très peu de dépendances externes** (see root `CLAUDE.md`):
+The Vidocq philosophy is **zéro ou très peu de dépendances externes** (see root `AGENTS.md`):
 - Production (`compile`/`runtime` scope): only Jakarta EE 11 / MicroProfile 7 specs.
 - Test scope: JUnit 5/6, TestNG (TCK only), Arquillian, AssertJ, Mockito (sparingly).
 - Build scope: Maven plugins from Apache or the project itself.

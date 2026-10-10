@@ -5,7 +5,7 @@ description: Append a new benchmark run entry to the BENCH.md of the current Vid
 
 # log-bench
 
-Append a benchmark run to `<sub-project>/BENCH.md` following the Vidocq convention defined in the root `CLAUDE.md`. **No perf number is allowed in a README or commit message without a corresponding BENCH.md entry.**
+Append a benchmark run to `<sub-project>/BENCH.md` following the Vidocq convention defined in the root `AGENTS.md`. **No perf number is allowed in a README or commit message without a corresponding BENCH.md entry.**
 
 ## When to invoke
 
@@ -53,7 +53,7 @@ Append a benchmark run to `<sub-project>/BENCH.md` following the Vidocq conventi
    ```markdown
    # BENCH.md — <sub-project>
 
-   Historique des mesures de performance. Convention : voir `../CLAUDE.md` (workspace root).
+   Historique des mesures de performance. Convention : voir `vidocq-workspace/AGENTS.md` (workspace root).
 
    Tout chiffre publié (README, commit, post) doit pointer vers une entrée ici.
 

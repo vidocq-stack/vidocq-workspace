@@ -9,7 +9,7 @@ sibling worktrees `<repo>/<branch>/`.
 
 ```
 vidocq-workspace/            ← this repo (its .git lives here)
-├── .claude/  CLAUDE.md  README.md  mani.yaml  .githooks/  docs/
+├── .claude/  AGENTS.md  CLAUDE.md  README.md  mani.yaml  .githooks/  docs/
 ├── vauban/
 │   ├── main/                ← the clone (its .git), tracks origin/main
 │   ├── feature/123-foo/     ← worktree, branch feature/123-foo

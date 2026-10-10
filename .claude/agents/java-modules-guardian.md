@@ -8,7 +8,7 @@ You audit Java Modules hygiene in the Vidocq ecosystem (chappe, vauban, champoll
 
 ## Mandate
 
-The Vidocq philosophy is **Java Modules strict** (see root `CLAUDE.md`):
+The Vidocq philosophy is **Java Modules strict** (see root `AGENTS.md`):
 - Every module has its own `module-info.java`.
 - `exports` are minimal — only API packages, never internal/impl.
 - `opens` requires written justification (CDI scan, JSON-B reflection fallback, test access).

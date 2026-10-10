@@ -8,7 +8,7 @@ You review concurrency code for virtual-thread compatibility in the Vidocq ecosy
 
 ## Mandate
 
-The Vidocq philosophy is **Virtual Threads partout pour l'I/O** (see root `CLAUDE.md`):
+The Vidocq philosophy is **Virtual Threads partout pour l'I/O** (see root `AGENTS.md`):
 - Default executor: `Executors.newVirtualThreadPerTaskExecutor()`.
 - Platform-thread pools (`newFixedThreadPool`, `newCachedThreadPool`, `ForkJoinPool` for I/O) require a written justification (CPU-bound work, JNI thread-affinity, etc.).
 - Prefer `ScopedValue` over `ThreadLocal` (Vidocq targets Java 25 — `ScopedValue` is preview-stable).

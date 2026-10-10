@@ -1,7 +1,7 @@
 # WORK_WITH_CLAUDE.md — Working with Yann on the Vidocq ecosystem
 
-> **What this is.** A *collaboration* meta-guide, complementary to `CLAUDE.md`.
-> `CLAUDE.md` states the **technical conventions** (Java Modules, zero-dep, codegen,
+> **What this is.** A *collaboration* meta-guide, complementary to `AGENTS.md`
+> (imported by `CLAUDE.md`). `AGENTS.md` states the **technical conventions** (Java Modules, zero-dep, codegen,
 > TDD…); this file states **how Yann works with Claude**: his stance, his rituals,
 > his signals, what earns his trust and what loses it.
 >
@@ -10,7 +10,7 @@
 > messages, themes, verbatim quotes). This is not guesswork — it is what the
 > exchanges show. To be re-read and amended over time.
 >
-> **Language.** This file is written in **English**, like `CLAUDE.md`, the code, the
+> **Language.** This file is written in **English**, like `AGENTS.md`, the code, the
 > CI and team messages (European project, multiple contributors). Reminder: the
 > *chat* stays in **French**. Verbatim quotes are kept in their original French —
 > they are evidence, not prose — with an English rendering in brackets.
@@ -304,7 +304,7 @@ mindmap
 ## 11. Session start-up checklist
 
 1. **Resync**: `git pull --rebase` on the relevant projects, locate the sources.
-2. **Load the context**: the sub-project's `CLAUDE.md` + the relevant memory
+2. **Load the context**: the sub-project's `AGENTS.md` + the relevant memory
    (and **verify** that a note has not gone stale).
 3. **Identify the register**: study (artefact) or execution ("go")?
 4. **Work in TDD**, at workspace scale if the campaign is cross-cutting.

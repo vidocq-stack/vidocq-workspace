@@ -1,7 +1,8 @@
 # Vidocq workspace
 
 The root of the Vidocq multi-repo working directory. It bundles the shared
-**Claude Code** config (agents, skills, conventions), the **mani** orchestration
+**agent instructions** (`AGENTS.md`, read by Codex and imported by Claude Code's
+`CLAUDE.md`), the shared **Claude Code** config (agents, skills), the **mani** orchestration
 (`mani.yaml`), and the shared **git hooks** (`.githooks/`). Check this repository
 out **as the root of your working directory**, then let mani clone the
 individual project repos inside it.
@@ -16,7 +17,8 @@ this repo only ever tracks the shared Claude config.
 ```
 <your-workspace>/            ← clone of THIS repo (its .git lives here)
 ├── .claude/                 ← shared subagents + slash-skills + settings.json
-├── CLAUDE.md                ← workspace conventions (commit rules, Java Modules/codegen/zero-dep, TDD, …)
+├── AGENTS.md                ← workspace conventions, single source (commit rules, Java Modules/codegen/zero-dep, TDD, …)
+├── CLAUDE.md                ← `@AGENTS.md` + Claude Code specific tooling
 ├── mani.yaml                ← mani orchestration: project list + cross-repo tasks
 ├── .githooks/               ← shared git hooks (DCO sign-off)
 ├── docs/                    ← workspace guides (mani & worktrees)
@@ -29,8 +31,10 @@ this repo only ever tracks the shared Claude config.
 
 Because a git repository can only track files **below** its own root, keeping
 the config at the workspace root (this repo) is what lets Claude Code pick up
-`.claude/` and `CLAUDE.md` for the whole multi-repo session — no symlinks, no
-submodules.
+`.claude/` and `CLAUDE.md` (and Codex pick up `AGENTS.md`) for the whole
+multi-repo session — no symlinks, no submodules. Each project repo also ships
+its own `AGENTS.md` with a short "Ecosystem rules" summary, because an agent
+started inside `<repo>/main/` only sees that repo's files.
 
 ## Getting started
 
@@ -44,12 +48,14 @@ submodules.
    mani run -a install-hooks # wires the shared DCO sign-off hooks into every repo
    ```
    The projects — the foundational bricks (`chappe`, `vauban`, `champollion`),
-   the Jakarta EE layers (`foy`, `cassini`, `mansart`), the MicroProfile bricks
-   (`ravel`, `knock`, `dirac`, `heisenberg`, `cervantes`, `cyrano`, `humboldt`,
-   `grimm`), the runtime (`vidocq`), and the support repos (`vidocq-parent`,
-   `vidocq-docs`, `ci`) — stay independent git repos and are ignored here.
-3. Open Claude Code at the workspace root — the shared agents, skills and
-   conventions are available immediately.
+   the Jakarta EE layers (`foy`, `cassini`, `mansart`, `erasmus`), the Jakarta
+   EE web tier (`peano` — Expression Language 6.0, `ibarra` — Pages 4.0), the
+   MicroProfile bricks (`ravel`, `knock`, `dirac`, `heisenberg`, `cervantes`,
+   `cyrano`, `humboldt`, `grimm`), the runtime (`vidocq`), and the support repos
+   (`vidocq-parent`, `vidocq-docs`, `pages`, `ci`, `governance`) — stay
+   independent git repos and are ignored here.
+3. Open Claude Code (or Codex) at the workspace root — the shared conventions
+   (and, for Claude Code, the shared agents and skills) are available immediately.
 
 See **[docs/working-with-mani-and-worktrees.md](docs/working-with-mani-and-worktrees.md)**
 for the mani use cases, the worktree workflow, git hooks, and IntelliJ setup.
@@ -69,11 +75,14 @@ for the mani use cases, the worktree workflow, git hooks, and IntelliJ setup.
 - `/log-bug` — append a bug entry to the current sub-project's `BUG.md`
 - `/log-bench` — append a benchmark run to the current sub-project's `BENCH.md`
 
-### Conventions (`CLAUDE.md`)
-The workspace-wide rules: signed-off (DCO) commits, strict Java Modules,
-compile-time codegen over reflection, zero/minimal dependencies, TDD, virtual
-threads for I/O, English for code/docs, and the `BUG.md` / `BENCH.md`
-traceability policy. Each sub-project additionally ships its own `CLAUDE.md`.
+### Conventions (`AGENTS.md`)
+The workspace-wide rules, kept in a single file read by every coding agent:
+signed and signed-off (DCO) commits, strict Java Modules, compile-time codegen
+over reflection, zero runtime dependencies, TDD, virtual threads for I/O,
+English everywhere, and the `BUG.md` / `BENCH.md` traceability policy.
+`CLAUDE.md` is just `@AGENTS.md` plus the Claude Code specific tooling — edit
+the rules in `AGENTS.md`. Each sub-project additionally ships its own
+`AGENTS.md` (and a `CLAUDE.md` importing it).
 
 ## Personal vs shared config
 

@@ -8,7 +8,7 @@ You design and review static code generation in the Vidocq ecosystem.
 
 ## Mandate
 
-The Vidocq philosophy is **génération de code statique au maximum** (see root `CLAUDE.md`):
+The Vidocq philosophy is **génération de code statique au maximum** (see root `AGENTS.md`):
 - Prefer **Class-File API** (`java.lang.classfile`, JEP 484) over ASM, Byte Buddy, or cglib.
 - Prefer **APT** (`javax.annotation.processing`) over runtime reflection or proxy generation.
 - Output must be AOT-compatible (GraalVM native-image, Project Leyden CDS) — no `Class.forName` of generated names at runtime, no dynamic class loading. Use `ServiceLoader` to discover generated artifacts.
