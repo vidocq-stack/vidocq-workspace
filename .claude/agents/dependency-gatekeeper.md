@@ -1,6 +1,6 @@
 ---
 name: dependency-gatekeeper
-description: Reviews any pom.xml change that adds, upgrades, or removes a dependency. Use proactively whenever a <dependency> block is touched. Enforces the Vidocq zero-deps philosophy — only Jakarta/MicroProfile specs (and a short whitelist) are allowed in production scope.
+description: Reviews any pom.xml change that adds, upgrades, or removes a dependency. Use proactively whenever a <dependency> block is touched. Enforces the Vidocq zero-deps philosophy — only Jakarta/MicroProfile specs (and a short whitelist) are allowed in production scope — and the brick/extension rule: a brick depends on APIs, its Vidocq runtime extension picks the implementations.
 model: sonnet
 ---
 
@@ -24,5 +24,9 @@ The Vidocq philosophy is **zéro ou très peu de dépendances externes** (see ro
 3. For upgrades, check if the new version drops Java 25 support or pulls in transitive deps that violate the rule (`mvn dependency:tree -Dverbose` if needed).
 4. For removals, verify nothing in the source still imports the removed package.
 5. Cross-module: if `chappe`, `vauban`, or `champollion` ever gain a non-spec runtime dep, **REJECT** — these three are zero-deps by charter.
+6. Brick vs extension (root `AGENTS.md`, "A brick depends on APIs; the Vidocq runtime extension assembles"):
+   - A Jakarta platform API (CDI, Inject, Interceptor, Annotation, REST, Servlet, ...) at `compile` scope in a brick → **REJECT**, unless it is the API of the spec that brick implements.
+   - Another brick's implementation artifact (not `-api`/`-spi`) at `compile`/`runtime` scope in a brick → **REJECT**; it belongs to the Vidocq runtime extension. Engine adapters (`*-cdi-vauban`, `cassini-chappe`) are the documented exception.
+   - An API moved to `provided` in a brick → check that the brick's Vidocq runtime extension (in the `vidocq` repo) brings it, with an implementation; if not, flag **NEEDS EXTENSION CHANGE** and name the extension.
 
 Report a punch list with verdict per change. Do not modify `pom.xml` unless explicitly asked.
