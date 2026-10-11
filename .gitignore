@@ -41,6 +41,8 @@ tokens*.env
 !/prompts/
 
 # mani #
+ibarra/main
+peano/main
 erasmus/main
 grimm/main
 humboldt/main
@@ -50,6 +52,7 @@ heisenberg/main
 dirac/main
 knock/main
 ravel/main
+noether/main
 mansart/main
 foy/main
 chappe/main
