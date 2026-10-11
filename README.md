@@ -48,7 +48,7 @@ started inside `<repo>/main/` only sees that repo's files.
    mani run -a install-hooks # wires the shared DCO sign-off hooks into every repo
    ```
    The projects — the foundational bricks (`chappe`, `vauban`, `champollion`),
-   the Jakarta EE layers (`foy`, `cassini`, `mansart`, `erasmus`), the Jakarta
+   the Jakarta EE layers (`foy`, `cassini`, `mansart`, `noether`, `erasmus`), the Jakarta
    EE web tier (`peano` — Expression Language 6.0, `ibarra` — Pages 4.0), the
    MicroProfile bricks (`ravel`, `knock`, `dirac`, `heisenberg`, `cervantes`,
    `cyrano`, `humboldt`, `grimm`), the runtime (`vidocq`), and the support repos
