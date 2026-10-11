@@ -75,6 +75,12 @@ projects:
     desc: Data implementation
     tags: [module, code]
 
+  noether:
+    path: noether/main
+    url: git@codefloe.com:Vidocq/noether.git
+    desc: Jakarta Persistence implementation (Emmy Noether)
+    tags: [module, code]
+
   ravel:
     path: ravel/main
     url: git@codefloe.com:Vidocq/ravel.git
