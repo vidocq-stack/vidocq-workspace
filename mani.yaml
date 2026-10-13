@@ -141,6 +141,12 @@ projects:
     desc: Pages implementation
     tags: [module, code]
 
+  tassis:
+    path: tassis/main
+    url: git@codefloe.com:Vidocq/tassis.git
+    desc: Messaging implementation
+    tags: [module, code]
+
 specs:
   parallel:
     output: table
