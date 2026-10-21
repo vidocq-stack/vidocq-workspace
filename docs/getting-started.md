@@ -279,8 +279,10 @@ The example fixes issue #42 of Chappe.
    **into** `Vidocq/chappe` `main` **from** `janedoe/chappe` `fix/42-header-without-colon`, and
    describe what the change does and why.
 7. **Follow the checks and the review.** The checks verify your CLA, your signatures and the
-   build of Chappe and of every repository that depends on it. If `main` moves on, rebase and
-   push again; never use the **Update branch** button, it breaks the signatures:
+   build of Chappe and of every repository that depends on it. They start once a maintainer has
+   approved them: Codefloe holds the workflows of a pull request from a fork until then. If
+   `main` moves on, rebase and push again; never use the **Update branch** button, it breaks the
+   signatures:
 
    ```bash
    git fetch origin
