@@ -21,7 +21,7 @@ this repo only ever tracks the shared Claude config.
 ├── CLAUDE.md                ← `@AGENTS.md` + Claude Code specific tooling
 ├── mani.yaml                ← mani orchestration: project list + cross-repo tasks
 ├── .githooks/               ← shared git hooks (DCO sign-off)
-├── docs/                    ← workspace guides (mani & worktrees)
+├── docs/                    ← workspace guides (getting started, mani & worktrees)
 ├── .gitignore               ← ignores the nested project clones + local/secret files
 ├── README.md
 │
@@ -38,9 +38,14 @@ started inside `<repo>/main/` only sees that repo's files.
 
 ## Getting started
 
+**New here? Follow [docs/getting-started.md](docs/getting-started.md).** It takes you from a
+fresh machine to your first pull request, step by step, on macOS, Linux and Windows (WSL 2):
+Codefloe account, SSH and GPG keys, CLA, tools, clone, Maven configuration, first build, and
+the pull request from your fork. In short, once your account and keys are ready:
+
 1. Clone this repo as your workspace directory:
    ```bash
-   git clone git@codefloe.com:Vidocq/vidocq-workspace.git vidocq && cd vidocq
+   git clone git@codefloe.com:Vidocq/vidocq-workspace.git && cd vidocq-workspace
    ```
 2. Install [mani](https://github.com/alajmo/mani) and populate the project repos:
    ```bash
@@ -48,14 +53,22 @@ started inside `<repo>/main/` only sees that repo's files.
    mani run -a install-hooks # wires the shared DCO sign-off hooks into every repo
    ```
    The projects — the foundational bricks (`chappe`, `vauban`, `champollion`),
-   the Jakarta EE layers (`foy`, `cassini`, `mansart`, `noether`, `erasmus`), the Jakarta
-   EE web tier (`peano` — Expression Language 6.0, `ibarra` — Pages 4.0), the
+   the Jakarta EE layers (`foy`, `cassini`, `mansart`, `noether`, `erasmus`, `tassis`), the
+   Jakarta EE web tier (`peano` — Expression Language 6.0, `ibarra` — Pages 4.0), the
    MicroProfile bricks (`ravel`, `knock`, `dirac`, `heisenberg`, `cervantes`,
    `cyrano`, `humboldt`, `grimm`), the runtime (`vidocq`), and the support repos
    (`vidocq-parent`, `vidocq-docs`, `pages`, `ci`, `governance`) — stay
    independent git repos and are ignored here.
-3. Open Claude Code (or Codex) at the workspace root — the shared conventions
+3. Declare the Maven snapshot repository in `~/.m2/settings.xml`
+   ([how](docs/getting-started.md#5-configure-maven-for-the-vidocq-snapshots)): the
+   repositories depend on each other, and on their parent, in `-SNAPSHOT` versions.
+4. Open Claude Code (or Codex) at the workspace root — the shared conventions
    (and, for Claude Code, the shared agents and skills) are available immediately.
+
+Contributors push to their own fork; maintainers push to the Vidocq repositories. The rules of
+both roles are in the [governance repository](https://codefloe.com/Vidocq/governance):
+[contributor guide](https://codefloe.com/Vidocq/governance/src/branch/main/CONTRIBUTING.md),
+[maintainer guide](https://codefloe.com/Vidocq/governance/src/branch/main/MAINTAINERS.md).
 
 See **[docs/working-with-mani-and-worktrees.md](docs/working-with-mani-and-worktrees.md)**
 for the mani use cases, the worktree workflow, git hooks, and IntelliJ setup.
