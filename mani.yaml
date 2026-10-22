@@ -155,7 +155,7 @@ projects:
 
   verne:
     path: verne/main
-    url: git@codefloe.com:Vidocq/Verne.git
+    url: git@codefloe.com:Vidocq/verne.git
     desc: Template engine
     tags: [module, code]
 
