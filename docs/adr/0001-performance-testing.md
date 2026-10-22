@@ -16,8 +16,8 @@ alternatives a user would otherwise pick. Today the figures exist, but by hand a
   coordinated-omission correction, `p99 < 10 ms` filter) against nginx, Jetty 12, Netty 4, Helidon SE, the JDK
   server, Go and Vert.x, run by hand on macuntu through `chappe-bench/docker/run-remote.sh`. `BENCHMARKS.md` makes it
   the canonical method;
-* a Grafana was installed next to SonarQube on 2026-10-20 (`grafana.dev.vidocq.io`, Codefloe OAuth `GRAFANA_DEV`) to
-  draw these results. It has no data source and no dashboard yet;
+* a Grafana was installed on 2026-10-20 as a stack of the Foix Portainer (`grafana.dev.vidocq.io`, Codefloe OAuth
+  `GRAFANA_DEV`) to draw these results. It has no data source and no dashboard yet;
 * no figure is measured on a schedule, so a regression is found when someone happens to rerun a bench.
 
 A benchmark run on a shared CI runner measures its neighbours: the Foix runner shares its host with SonarQube,
@@ -117,39 +117,71 @@ artefact is on Maven Central is found too late. Its results become the version's
 * At release, the report compares the version with the previous one. It is read in the release checklist; it never
   blocks the release, the same report mode as SonarQube.
 
-### Storage and display
+### Storage
 
-* **The raw results are the source of truth**: JMH JSON, `wrk2` output with its HdrHistogram, soak time series and
-  the environment fingerprint, one directory per run, pushed by the bench job to a data repository,
-  `Vidocq/bench-results`. It is append-only and versioned, and holds no secret.
-* **Grafana reads PostgreSQL**, on the Grafana host, loaded from `Vidocq/bench-results` by a small importer. The
-  bench machine holds no database credential, and the database can be rebuilt from the repository at any time.
-  Prometheus is not used: it pulls live metrics, and these are batch results. Schema: `run` (repository, SHA, ref,
-  kind, version, fingerprint, date, flags such as `throttled`), `result` (run, benchmark, parameters, metric, value,
-  error, unit), `series` (soak time series).
-* **Dashboards**: one trend per brick with releases as annotations; the comparison with competitors per scenario; the
+Results live in three places, each with one role:
+
+| Where | What | Role |
+|---|---|---|
+| **`Vidocq/bench-results`**, a data repository on Codefloe | The raw results of every run: JMH JSON, `wrk2` output with its HdrHistogram, soak time series, environment fingerprint | **Source of truth.** Append-only, versioned, holds no secret |
+| **PostgreSQL**, in the Grafana stack on the Foix Portainer | The same data in tables | Grafana's data source only. **Disposable**: an importer reloads it from the repository |
+| **CI artefacts**, with the runner's retention | JFR recordings, logs | Too heavy for git; useful for a few weeks to analyse a regression |
+
+The repository is laid out by run, and a release run is also copied under `releases/` and tagged
+(`<brick>-<version>`, e.g. `chappe-0.3.0`):
+
+```
+bench-results/
+  runs/2026-10-23/chappe/<sha>-nightly/    fingerprint.json, jmh.json, wrk2/…
+  runs/2026-10-24/vidocq/<sha>-weekly/     …, competitors/quarkus-<version>.json, …
+  releases/chappe/0.3.0/                   the release run, plus report.md
+```
+
+* The bench job pushes to the repository with the bot token; the importer, next to Grafana and PostgreSQL on Foix,
+  loads each new run. The bench machine holds no database credential, and the database can be rebuilt from the
+  repository at any time.
+* Prometheus is not used: it pulls live metrics, and these are batch results.
+* Schema: `run` (repository, SHA, ref, kind, version, fingerprint, date, flags such as `throttled`), `result` (run,
+  benchmark, parameters, metric, value, error, unit), `series` (soak time series).
+* Dashboards: one trend per brick with releases as annotations; the comparison with competitors per scenario; the
   soak view (p99, RSS, GC over time); "last night", each delta coloured against its noise band.
-* **Grafana stays private** behind the Codefloe login. Public figures come from release runs only: a page per version
-  in vidocq-docs, with the configurations and the exact commands so that anyone can reproduce them.
 
-### `BENCH.md`
+### Snapshot and release
 
-The rule of `AGENTS.md` (no figure without a `BENCH.md` entry) stays, with one change: scheduled runs (nightly,
-Saturday) live in `Vidocq/bench-results` and Grafana only, since an entry per night would bury the entries that
-matter. A release run adds an entry to the `BENCH.md` of each measured brick through a bot pull request. Figures
-measured by hand while investigating are recorded as today.
+The two kinds of run have different status:
+
+* **Runs of `main`** (nightly, Saturday) measure a `-SNAPSHOT`: code nobody has received yet. They go to `runs/` and
+  to Grafana, which stays private behind the Codefloe login. They feed trends and regression alerts, and are never
+  published or quoted as the figures of Vidocq.
+* **The release run**, on the release commit before deploying, gives the only official figures of a version. It is
+  frozen under `releases/<brick>/<version>/` and tagged. Its `report.md` compares the version with the previous
+  release and is read in the release checklist.
+
+### Publication
+
+Only release runs are published:
+
+1. **`BENCH.md`** of each measured brick: an entry added by a bot pull request, in the format the rule of
+   `AGENTS.md` already asks for (date, hardware/JVM, exact command, raw results, delta against the previous
+   release). Scheduled runs never go to `BENCH.md`: an entry per night would bury the entries that matter. Figures
+   measured by hand while investigating are recorded as today.
+2. **vidocq-docs**: a Performance page per version. The docs are versioned per release line, so the 0.3 docs show the
+   0.3 figures. Charts are drawn at docs build time from the JSON under `releases/`, without Grafana. The page gives
+   the configurations and the exact commands, so that anyone can reproduce the figures.
+3. **vidocq.dev**: one page with the comparison of the latest release (the Vidocq runtime against Quarkus, Helidon
+   MP, Spring Boot and Open Liberty), linking to the docs page for the detail.
 
 ### Rollout
 
 1. **P0 — Machine and noise.** `BenchMontreuil01` and the window timer; ten identical runs to get each benchmark's
-   noise band. Document the Grafana stack (host, version, compose) in the CI rebuild runbook.
+   noise band. Document the Grafana stack of the Foix Portainer (version, compose) in the CI rebuild runbook.
 2. **P1 — One end-to-end chain on two pilots.** A shared action `ci/run-bench` (run, fingerprint, push to
    `Vidocq/bench-results`), the importer, the schema, the data source and a first dashboard. Pilots: **chappe** (JMH
    and the shootout) and **champollion** (JMH, `bench-results.json` already exists).
 3. **P2 — Nightly** on the eleven JMH modules, with the regression alerts.
 4. **P3 — L2 capacity and soak** on foy, cassini, mansart/noether and tassis.
 5. **P4 — L3**: the TechEmpower application on Vidocq, Quarkus, Helidon MP, Spring Boot and Open Liberty, JVM and
-   native; then the release run and its docs page.
+   native; then the release run, its `BENCH.md` entries, its docs page and the vidocq.dev page.
 
 ## Consequences
 
