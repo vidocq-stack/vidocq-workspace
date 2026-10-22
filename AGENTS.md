@@ -16,12 +16,12 @@ The ecosystem spans several groups of repositories (all under the `Vidocq` organ
 
 - **Foundational bricks** (no dependencies between them): `chappe` (pure Java 25 HTTP/1.1 + HTTP/2 server — transport), `vauban` (CDI 4.1 Lite container, Java Modules native — DI), `champollion` (Jakarta JSON-P 2.1 + JSON-B 3.0).
 - **Jakarta EE layers** (compose the bricks): `foy` (Servlet 6.1 — transport via chappe, CDI via vauban), `cassini` (REST 4.0 / JAX-RS), `mansart` (Jakarta Data 1.0 — JDBC pool and transactions), `noether` (Jakarta Persistence 3.2; includes the non-published `noether-validation` test/TCK stopgap), `erasmus` (Bean Validation), `tassis` (Messaging 3.1).
-- **Jakarta EE web tier** (in design): `peano` (Jakarta Expression Language 6.0 — depends on nothing beyond the `jakarta.el` API), `ibarra` (Jakarta Pages 4.0 — build-time page compilation, runs on `foy` with `peano` as the default EL provider).
+- **Jakarta EE web tier** (in design): `peano` (Jakarta Expression Language 6.0 — depends on nothing beyond the `jakarta.el` API), `ibarra` (Jakarta Pages 4.0 — build-time page compilation, runs on `foy` with `peano` as the default EL provider), `bodoni` (Jakarta Standard Tag Library 3.0 — portable tag handlers on the JSTL API alone; optional build-time inlining by `ibarra`).
 - **MicroProfile bricks:** `ravel` (Config 3.1), `knock` (Health 4.0), `dirac` (Metrics 5.1), `heisenberg` (Fault Tolerance 4.1), `cervantes` (JWT 2.1), `cyrano` (REST Client 4.0), `humboldt` (Telemetry 2.1), `grimm` (OpenAPI 4.1).
 - **Vidocq bricks** (no specification behind them, in design): `verne` (template engine).
 - **Runtime & support:** `vidocq` (the runtime — orchestrator, extension mechanism, packaging), `vidocq-parent` (shared parent POM), `vidocq-docs` (Antora docs site, English-only), `pages` (vidocq.dev site), `ci` (CI configuration & pipelines), `governance` (CLA, contributor GPG keys, processes), `GestionProjet` (inverted dependency graph + multi-repo impact scripts).
 
-Logical dependency graph: the foundational bricks (`chappe` + `vauban` + `champollion`) have no dependencies between them; `foy`, `cassini` and `mansart` compose them; `noether` provides Persistence with optional Vauban integration and uses Mansart's pool/transactions; `peano` stands alone on the `jakarta.el` API, and `ibarra` composes `foy` + `peano`; the MicroProfile bricks build on `vauban` (CDI) and, depending on the case, on `cassini` or `chappe`; and `vidocq` orchestrates the whole via an extension SPI inspired by Quarkus and carries the MicroProfile 7.1 certification of the assembled runtime.
+Logical dependency graph: the foundational bricks (`chappe` + `vauban` + `champollion`) have no dependencies between them; `foy`, `cassini` and `mansart` compose them; `noether` provides Persistence with optional Vauban integration and uses Mansart's pool/transactions; `peano` stands alone on the `jakarta.el` API, and `ibarra` composes `foy` + `peano`; `bodoni` depends only on the JSTL API (Pages, Servlet and EL APIs `provided`), and its runtime extension assembles it with `ibarra` + `peano`; the MicroProfile bricks build on `vauban` (CDI) and, depending on the case, on `cassini` or `chappe`; and `vidocq` orchestrates the whole via an extension SPI inspired by Quarkus and carries the MicroProfile 7.1 certification of the assembled runtime.
 
 **Multi-repo impact**: before modifying a foundational brick, check its consumers via `GestionProjet/graph/inverted.json` — a change in `vauban` ripples through almost the entire workspace.
 
@@ -110,7 +110,7 @@ Read the targeted project's `AGENTS.md` (or `CLAUDE.md`) and `README.md` before 
 
 - **`<repo>/AGENTS.md`** — conventions specific to the brick. It takes precedence over this file in case of local divergence.
 - **`<repo>/README.md`** — product view and detailed architecture.
-- **`<repo>/ROADMAP.md`** or **`PLAN.md`** — milestones and remaining work (`PLAN.md` is the design of record for bricks still in design, e.g. peano, ibarra). There is no unified roadmap: each brick carries its own, with `vidocq/ROADMAP.md` acting as the entry point for the assembled runtime.
+- **`<repo>/ROADMAP.md`** or **`PLAN.md`** — milestones and remaining work (`PLAN.md` is the design of record for bricks still in design, e.g. peano, ibarra, bodoni). There is no unified roadmap: each brick carries its own, with `vidocq/ROADMAP.md` acting as the entry point for the assembled runtime.
 - **`<repo>/BUG.md` and `BENCH.md`** — traceability (see above). Bug ids cross project boundaries when the cause lies upstream.
 - **`<repo>/tasks/todo.md` and `tasks/lessons.md`** — current work plan and numbered lessons, to be re-read when opening a session.
 

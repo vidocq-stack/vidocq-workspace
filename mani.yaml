@@ -147,6 +147,12 @@ projects:
     desc: Pages implementation
     tags: [module, code]
 
+  bodoni:
+    path: bodoni/main
+    url: git@codefloe.com:Vidocq/bodoni.git
+    desc: Standard Tag Library implementation (Giambattista Bodoni)
+    tags: [module, code]
+
   tassis:
     path: tassis/main
     url: git@codefloe.com:Vidocq/tassis.git

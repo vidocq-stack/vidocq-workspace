@@ -44,6 +44,7 @@ tokens*.env
 verne/main
 tassis/main
 ibarra/main
+bodoni/main
 peano/main
 erasmus/main
 grimm/main
