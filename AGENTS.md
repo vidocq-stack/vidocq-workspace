@@ -66,6 +66,10 @@ Cross-cutting rules that apply to **all** projects, unless an explicitly documen
 - **Bugs**: every reproducible bug (internal issue, regression, incorrect behaviour not yet fixed) must be tracked in a `BUG.md` at the root of the relevant project, with: short id, date, symptom, minimal repro, hypothesised cause, status. Updated at each investigation.
 - **Benchmarks**: every performance figure (JMH, wrk, comparison vs Netty/Jetty/Parsson/Yasson/Jackson, etc.) must be recorded in a `BENCH.md` at the root of the project, with: date, hardware/JVM, exact command, raw results, and delta vs the previous run. No performance figure in a README or a commit message without a corresponding entry in `BENCH.md`.
 
+## Code quality
+
+SonarQube analyses every Java repository on each push to `main` and each pull request; the tools plugged into the analysis, their settings and the pitfalls met so far are in `QUALITY.md`. The analysis runs in report mode: a red quality gate does not block a merge, but it turns `main`'s gate red. Read the SonarQube comment of a pull request before merging it, and leave no new issue behind.
+
 ## Prerequisites (common to all projects)
 
 - **Java 25** (Temurin) + **Maven 3.9.16** — pinned via `.sdkmanrc` in each project: `cd <repo>/main && sdk env`.

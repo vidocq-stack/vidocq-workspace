@@ -73,6 +73,9 @@ both roles are in the [governance repository](https://codefloe.com/Vidocq/govern
 See **[docs/working-with-mani-and-worktrees.md](docs/working-with-mani-and-worktrees.md)**
 for the mani use cases, the worktree workflow, git hooks, and IntelliJ setup.
 
+How the code is measured (the SonarQube server, the CI action that feeds it, the tools plugged
+into it and their settings) is in **[QUALITY.md](QUALITY.md)**.
+
 ## What's shared
 
 ### Subagents (`.claude/agents/`)
