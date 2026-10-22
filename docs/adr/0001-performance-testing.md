@@ -1,0 +1,163 @@
+# ADR 0001 — Performance testing of the ecosystem
+
+* Status: Accepted
+* Date: 2026-10-22
+* Deciders: Yann Blazart
+
+## Context
+
+Every brick must show what load it sustains, how it holds that load over time, and where it stands against the
+alternatives a user would otherwise pick. Today the figures exist, but by hand and one brick at a time:
+
+* eleven bricks carry a JMH module (`chappe-bench`, `champollion-bench`, `vauban-bench`, `peano-bench`,
+  `tassis-bench`, `ravel-bench`, `heisenberg-bench`, `dirac-bench`, `cervantes-bench`, `erasmus-bench`,
+  `grimm-bench`), and fourteen repositories a `BENCH.md` filled by hand;
+* Chappe has the only external load harness: a `wrk2` open-loop shootout (fresh container per rate,
+  coordinated-omission correction, `p99 < 10 ms` filter) against nginx, Jetty 12, Netty 4, Helidon SE, the JDK
+  server, Go and Vert.x, run by hand on macuntu through `chappe-bench/docker/run-remote.sh`. `BENCHMARKS.md` makes it
+  the canonical method;
+* a Grafana was installed next to SonarQube on 2026-10-20 (`grafana.dev.vidocq.io`, Codefloe OAuth `GRAFANA_DEV`) to
+  draw these results. It has no data source and no dashboard yet;
+* no figure is measured on a schedule, so a regression is found when someone happens to rerun a bench.
+
+A benchmark run on a shared CI runner measures its neighbours: the Foix runner shares its host with SonarQube,
+Grafana, Kroki and the reverse proxy. The machine matters more than the harness.
+
+## Decision
+
+### Three levels, three questions
+
+| Level | Question | Tool | Scope |
+|---|---|---|---|
+| L1 — micro | Did this hot path regress? | JMH, `-rf json` | Every brick with a `*-bench` module |
+| L2 — capacity and endurance | Which rate does the brick sustain under its latency objective, and does it hold it? | `wrk2` open-loop rate steps, then a soak at ~70 % of that capacity | Bricks that take traffic: chappe, foy, cassini, mansart/noether (PostgreSQL in a container), tassis |
+| L3 — competition | Where does Vidocq stand against the alternatives? | The same scenarios on every target | See below |
+
+The L2 soak lasts 30 to 60 minutes and records, over time: p99 drift, RSS and old generation (must level off),
+file descriptors and threads (must not climb), errors. A JFR recording is kept for the last minutes.
+
+L3 compares like with like:
+
+* **Chappe**, an HTTP server, against HTTP servers: Helidon SE WebServer, Jetty, Netty, Vert.x (the existing
+  shootout). Quarkus is not a Chappe competitor: its HTTP layer is Vert.x, already in the shootout.
+* **The assembled Vidocq runtime** (cassini + champollion + vauban on chappe) against **Quarkus, Helidon MP, Spring
+  Boot and Open Liberty**.
+* Scenarios are the TechEmpower ones (plaintext, JSON, single query, fortunes): known, so the figures read without
+  explanation.
+* Besides throughput and latency, L3 measures cold start, time to first response and RSS, on the JVM and, where the
+  competitor supports it, as a GraalVM native image (Open Liberty runs on the JVM only).
+* Every target runs on the same JDK with the same heap, configured by its own performance guide. Versions are pinned
+  and bumped by Renovate; the configurations are published with the results, and a competitor's maintainers may
+  propose a better tuning.
+
+### The machine: macuntu
+
+The benches run on **macuntu**, a Mac mini 2018 (`Macmini8,1`, Intel Core i7-8700B, 6 cores / 12 threads, 32 GB,
+Ubuntu 22.04, kernel 5.15), at Montreuil.
+
+Why this machine:
+
+* it is already where the Chappe shootout ran since May 2026, so the existing series continue;
+* hardware that no longer changes keeps a series comparable over years;
+* a 6-core box is close to what an application gets in a container or a small VM, so the figures are
+  conservative rather than flattering;
+* what L1 and L3 report is a ratio — this commit against the previous one, Vidocq against a competitor — which a
+  modest machine measures as well as a large one.
+
+Its limits, and how they are handled:
+
+* **Frequency and heat.** The small chassis throttles under sustained all-core load. During a bench window the
+  governor is set to `performance` and turbo is disabled (`intel_pstate/no_turbo=1`): the CPU stays at its 3.2 GHz
+  base, steady rather than fast. The harness samples frequency and temperature during the run, and a run whose
+  frequency drops below base is marked `throttled` and kept out of trends and alerts.
+* **Six cores for two processes.** The load generator and the server are pinned to disjoint physical cores, each with
+  its hyper-thread sibling (mapping read from `lscpu -e`), as the shootout already does with `cpuset`.
+* **Absolute figures.** They describe this machine, not a server; every published figure names the hardware.
+* **A single machine.** If it dies, its series end. A replacement starts new series, calibrated by running the last
+  release on both machines when possible.
+
+Every result carries a fingerprint of the environment: CPU model, kernel, governor and turbo state, JDK, JVM flags,
+commit SHA.
+
+### The bench window
+
+macuntu also hosts the CI runner `RunnerMontreuil01`. They never run at the same time:
+
+* a second runner on macuntu, `BenchMontreuil01`, carries the label `vidocq-bench` only, with a capacity of one job;
+* a systemd timer on the host opens the window every night at 00:30 UTC: it stops `RunnerMontreuil01` once its
+  running job, if any, has ended, sets governor and turbo, and starts `BenchMontreuil01`. At 02:45 UTC it closes the
+  window the other way round, so that `tck-nightly` (03:00 UTC) has both runners again. The Saturday window runs
+  until 06:00 UTC for the long runs;
+* a bench workflow (`runs-on: vidocq-bench`) only ever finds a runner inside the window. A job dispatched during the
+  day waits for the next window, so a release run needs no special handling;
+* the first step of every bench job checks that nothing else runs on the host (no other container, general runner
+  stopped) and aborts otherwise rather than produce a noisy figure.
+
+### Cadence
+
+| When | What | Purpose |
+|---|---|---|
+| Pull request | Nothing by default | A noisy, long check helps no one at review time |
+| Nightly | L1 short profile, plus L2 capacity of the HTTP bricks, **only for repositories whose `main` moved** | A regression is known the next morning |
+| Saturday | L1 full (more forks), L2 soaks, L3 full shootout | Competitors do not change every night |
+| Release | L1 + L2 + L3, on the release commit, before deploying | The reference figures of the version |
+
+The competitors also act as a **control group**: when their figures move between two Saturdays while their version
+did not, the machine changed, and that week's trends are read with care.
+
+The release run happens on the commit about to be released, not after the deploy: a regression found once the
+artefact is on Maven Central is found too late. Its results become the version's frozen figures.
+
+### Regressions alert, they never block
+
+* After P0 (below), each benchmark has a noise band: the coefficient of variation over ten identical runs.
+* A nightly result outside its band **two nights in a row** opens an issue on the brick's repository and posts to
+  Slack (`ci/notify-slack`). One night is not enough: a signal that is red every other night teaches people to
+  ignore it.
+* At release, the report compares the version with the previous one. It is read in the release checklist; it never
+  blocks the release, the same report mode as SonarQube.
+
+### Storage and display
+
+* **The raw results are the source of truth**: JMH JSON, `wrk2` output with its HdrHistogram, soak time series and
+  the environment fingerprint, one directory per run, pushed by the bench job to a data repository,
+  `Vidocq/bench-results`. It is append-only and versioned, and holds no secret.
+* **Grafana reads PostgreSQL**, on the Grafana host, loaded from `Vidocq/bench-results` by a small importer. The
+  bench machine holds no database credential, and the database can be rebuilt from the repository at any time.
+  Prometheus is not used: it pulls live metrics, and these are batch results. Schema: `run` (repository, SHA, ref,
+  kind, version, fingerprint, date, flags such as `throttled`), `result` (run, benchmark, parameters, metric, value,
+  error, unit), `series` (soak time series).
+* **Dashboards**: one trend per brick with releases as annotations; the comparison with competitors per scenario; the
+  soak view (p99, RSS, GC over time); "last night", each delta coloured against its noise band.
+* **Grafana stays private** behind the Codefloe login. Public figures come from release runs only: a page per version
+  in vidocq-docs, with the configurations and the exact commands so that anyone can reproduce them.
+
+### `BENCH.md`
+
+The rule of `AGENTS.md` (no figure without a `BENCH.md` entry) stays, with one change: scheduled runs (nightly,
+Saturday) live in `Vidocq/bench-results` and Grafana only, since an entry per night would bury the entries that
+matter. A release run adds an entry to the `BENCH.md` of each measured brick through a bot pull request. Figures
+measured by hand while investigating are recorded as today.
+
+### Rollout
+
+1. **P0 — Machine and noise.** `BenchMontreuil01` and the window timer; ten identical runs to get each benchmark's
+   noise band. Document the Grafana stack (host, version, compose) in the CI rebuild runbook.
+2. **P1 — One end-to-end chain on two pilots.** A shared action `ci/run-bench` (run, fingerprint, push to
+   `Vidocq/bench-results`), the importer, the schema, the data source and a first dashboard. Pilots: **chappe** (JMH
+   and the shootout) and **champollion** (JMH, `bench-results.json` already exists).
+3. **P2 — Nightly** on the eleven JMH modules, with the regression alerts.
+4. **P3 — L2 capacity and soak** on foy, cassini, mansart/noether and tassis.
+5. **P4 — L3**: the TechEmpower application on Vidocq, Quarkus, Helidon MP, Spring Boot and Open Liberty, JVM and
+   native; then the release run and its docs page.
+
+## Consequences
+
+* No figure is produced on a machine shared with CI: a bench job either gets the window or aborts.
+* `RunnerMontreuil01` is offline about two hours and a quarter each night (five and a half on Saturday); Foix alone
+  takes CI jobs during that time.
+* A release waits for the next window to get its figures, at most one night.
+* The `BENCH.md` paragraph of `AGENTS.md`, and the "Ecosystem rules" summary of each repository's `AGENTS.md`, are
+  updated with P2, when scheduled runs start.
+* Publishing a comparison with Quarkus, Helidon, Spring Boot and Open Liberty commits us to keep its configurations
+  public and to rerun it when a competitor shows a better setup.
