@@ -159,25 +159,63 @@ The two kinds of run have different status:
 
 ### Publication
 
-Only release runs are published:
+Only release runs are published. A generator, the shared action `ci/bench-report`, turns the JSON of
+`releases/<brick>/<version>/` into everything below:
 
-1. **`BENCH.md`** of each measured brick: an entry added by a bot pull request, in the format the rule of
-   `AGENTS.md` already asks for (date, hardware/JVM, exact command, raw results, delta against the previous
-   release). Scheduled runs never go to `BENCH.md`: an entry per night would bury the entries that matter. Figures
-   measured by hand while investigating are recorded as today.
-2. **vidocq-docs**: a Performance page per version. The docs are versioned per release line, so the 0.3 docs show the
-   0.3 figures. Charts are drawn at docs build time from the JSON under `releases/`, without Grafana. The page gives
-   the configurations and the exact commands, so that anyone can reproduce the figures.
-3. **vidocq.dev**: one page with the comparison of the latest release (the Vidocq runtime against Quarkus, Helidon
-   MP, Spring Boot and Open Liberty), linking to the docs page for the detail.
+```
+release run (macuntu)
+  └─► bench-results/releases/<brick>/<version>/        raw JSON, tag <brick>-<version>
+        └─► ci/bench-report
+              ├─ report.md                             release checklist (internal)
+              ├─ BENCH.md entry                        bot pull request on the brick
+              └─ partials/performance/<version>.adoc   bot pull request on the brick,
+                                                       branches docs/<version> and main
+```
+
+1. **`BENCH.md`** of each measured brick: an entry in the format the rule of `AGENTS.md` already asks for (date,
+   hardware/JVM, exact command, raw results, delta against the previous release). It stays the raw ledger. Scheduled
+   runs never go to `BENCH.md`: an entry per night would bury the entries that matter. Figures measured by hand while
+   investigating are recorded as today.
+2. **The docs**: a Performance page per brick, in the brick's own `docs/en`, as Chappe's `performance.adoc` already
+   is. The docs are versioned per release line (`docs/<version>` branches), so the 0.3 docs show the 0.3 figures for
+   good.
+   * The generated partial carries tables and charts. Charts are `[vegalite]` blocks with their data inline, drawn
+     by the Kroki the docs build already uses (`kroki-fetch-diagram: true`): they become static SVG at build time,
+     with no JavaScript, no Grafana, and no change to the UI bundle or the playbook. Soak series are downsampled
+     (one point every 10 s, about 360 points for an hour) to keep the blocks readable.
+   * The partial also lands on `main`, so the next release line inherits every earlier partial and its page can
+     draw the evolution across releases.
+   * The page mixes written and generated sections:
+
+     | Section | Written by | Content |
+     |---|---|---|
+     | TL;DR and analysis | A maintainer | What the figures mean, why a ceiling is where it is. A generator cannot write it |
+     | Figures of this version | Generated | Key metrics, delta against the previous release |
+     | Evolution | Generated | Key benchmarks across releases |
+     | Capacity (L2) | Generated | p99 against offered rate, with the latency objective drawn |
+     | Endurance (L2) | Generated | p99 and RSS over the soak |
+     | Competitors | Generated | For Chappe: against Helidon SE, Jetty, Netty, Vert.x |
+     | Methodology and reproducibility | Generated | Machine fingerprint, exact commands, link to the `bench-results` tag and the configurations |
+
+   * The runtime comparison (Vidocq against Quarkus, Helidon MP, Spring Boot and Open Liberty: throughput per
+     TechEmpower scenario, cold start and RSS on the JVM and native) is the Performance page of the `vidocq`
+     component.
+3. **vidocq.dev**: the headline chart of the runtime comparison, the same SVG committed under
+   `public/images/bench/<version>/`, linking to the docs page for the detail. A blog post per release may tell the
+   figures.
+
+Grafana is never embedded in the docs: it is private, depends on Foix, and changes every night, whereas the page of a
+version must show that version forever. The SVG frozen in git with the version follows the rule the diagrams already
+follow.
 
 ### Rollout
 
 1. **P0 — Machine and noise.** `BenchMontreuil01` and the window timer; ten identical runs to get each benchmark's
    noise band. Document the Grafana stack of the Foix Portainer (version, compose) in the CI rebuild runbook.
 2. **P1 — One end-to-end chain on two pilots.** A shared action `ci/run-bench` (run, fingerprint, push to
-   `Vidocq/bench-results`), the importer, the schema, the data source and a first dashboard. Pilots: **chappe** (JMH
-   and the shootout) and **champollion** (JMH, `bench-results.json` already exists).
+   `Vidocq/bench-results`), the importer, the schema, the data source and a first dashboard, then `ci/bench-report`
+   on Chappe's existing Performance page. Pilots: **chappe** (JMH and the shootout) and **champollion** (JMH,
+   `bench-results.json` already exists).
 3. **P2 — Nightly** on the eleven JMH modules, with the regression alerts.
 4. **P3 — L2 capacity and soak** on foy, cassini, mansart/noether and tassis.
 5. **P4 — L3**: the TechEmpower application on Vidocq, Quarkus, Helidon MP, Spring Boot and Open Liberty, JVM and
