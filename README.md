@@ -56,7 +56,7 @@ the pull request from your fork. In short, once your account and keys are ready:
    the Jakarta EE layers (`foy`, `cassini`, `mansart`, `noether`, `erasmus`, `tassis`), the
    Jakarta EE web tier (`peano` — Expression Language 6.0, `ibarra` — Pages 4.0), the
    MicroProfile bricks (`ravel`, `knock`, `dirac`, `heisenberg`, `cervantes`,
-   `cyrano`, `humboldt`, `grimm`), the runtime (`vidocq`), and the support repos
+   `cyrano`, `humboldt`, `grimm`), the template engine (`verne`), the runtime (`vidocq`), and the support repos
    (`vidocq-parent`, `vidocq-docs`, `pages`, `ci`, `governance`) — stay
    independent git repos and are ignored here.
 3. Declare the Maven snapshot repository in `~/.m2/settings.xml`

@@ -41,6 +41,7 @@ tokens*.env
 !/prompts/
 
 # mani #
+verne/main
 tassis/main
 ibarra/main
 peano/main

@@ -153,6 +153,12 @@ projects:
     desc: Messaging implementation
     tags: [module, code]
 
+  verne:
+    path: verne/main
+    url: git@codefloe.com:Vidocq/Verne.git
+    desc: Template engine
+    tags: [module, code]
+
 specs:
   parallel:
     output: table
