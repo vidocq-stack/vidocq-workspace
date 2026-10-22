@@ -162,7 +162,7 @@ The job image of the shared runners is `node:24.22.1-trixie` (glibc 2.41; Infer 
 | [Infer](https://fbinfer.com/) (RacerD) | 1.3.0 | data races | Chappe, Foy | reliability issues, high |
 | [japicmp](https://siom79.github.io/japicmp/) | 0.26.3 | incompatible changes against the last release | Chappe, Foy | a pull-request comment |
 | [ArchUnit](https://www.archunit.org/) | 1.5.1 | breaches of the architecture rules | Chappe's and Foy's test suites | a failing build |
-| [OWASP ZAP](https://www.zaproxy.org/) | 2.17.0 | vulnerabilities of the running server | Chappe, nightly | a red nightly, Slack |
+| [OWASP ZAP](https://www.zaproxy.org/) | 2.17.0 | vulnerabilities of the running server | Chappe and Foy, nightly | a red nightly, Slack |
 
 Every downloaded tool is a release at least two weeks old when it was chosen, checked by SHA-256 before it runs.
 
@@ -266,7 +266,7 @@ None of them sends a request to Maven Central.
   `foy-cdi-vauban`), the layers of the `module-info.java` files, no reflection outside the four documented
   fallbacks, no platform threads (an executor given a virtual-thread factory is allowed), no `ThreadLocal`.
 
-### OWASP ZAP: nightly scan (Chappe)
+### OWASP ZAP: nightly scan (Chappe, Foy)
 
 - [`zap-nightly.yml`](https://codefloe.com/Vidocq/chappe/src/branch/main/.forgejo/workflows/zap-nightly.yml),
   every night at 03:30 UTC and on demand ([#273](https://codefloe.com/Vidocq/vidocq/issues/273)): it builds
@@ -276,13 +276,22 @@ None of them sends a request to Maven Central.
   accepted fails the night; informational alerts never do. The list is empty: since chappe#49 the `Server` header
   no longer gives the version, and a version coming back would fail the night.
 - Slack hears of failures on `main` only.
+- Foy has no runnable application, so it scans [`foy-zap-target`](https://codefloe.com/Vidocq/foy/src/branch/main/foy-zap-target):
+  Foy on Chappe with Vauban, serving what a container answers for (an escaped echo page and its form, a session,
+  a redirect, `sendError` pages, a thrown exception, a static file), behind a filter that sets the security headers
+  a careful application sets, so that the scan sees what the container itself leaks. Never published,
+  `sonar.skip`. Its first runs found a reflected XSS in the container's error page and a session cookie without
+  `SameSite` (foy#61). Foy's `accepted.tsv` names the exact evidence it accepts, not the whole rule: accepting the
+  generic 500 page must not hide a future stack trace in an error page.
+- Foy's pull-request validation does not run the official Servlet TCK (non-public artifacts): a change to what
+  the container writes on the wire is checked with `run-official-tck-servlet6.1.sh --all` before merging.
 
 ## Where each tool runs
 
 | Repositories | SonarQube, JaCoCo, security scans | Error Prone | Infer | japicmp | ArchUnit | ZAP |
 |---|---|---|---|---|---|---|
 | chappe | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| foy | ✓ | ✓ | ✓ | ✓ | ✓ | in progress |
+| foy | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
 | cassini, cervantes, champollion, cyrano, dirac, grimm, heisenberg, humboldt, ibarra, knock, mansart, peano, ravel, tassis, vauban, verne, vidocq | ✓ | | | | | |
 | noether | pull request waiting ([noether#40](https://codefloe.com/Vidocq/noether/pulls/40)) | | | | | |
 
