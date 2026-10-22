@@ -158,10 +158,10 @@ The job image of the shared runners is `node:24.22.1-trixie` (glibc 2.41; Infer 
 | [OSV-Scanner](https://github.com/google/osv-scanner) | 2.6.0 | known vulnerabilities in the shipped dependencies | every analysed repository | vulnerabilities, on the root `pom.xml` |
 | [OpenGrep](https://github.com/opengrep/opengrep) + opengrep-rules | 1.30.1, rules at `f1d2b562` | security patterns in the main Java sources | every analysed repository | vulnerabilities |
 | [Trivy](https://github.com/aquasecurity/trivy) | 0.75.0 | leaked secrets, Dockerfile misconfigurations | every analysed repository | vulnerabilities |
-| [Error Prone](https://errorprone.info/) | 2.50.0 | bug patterns, at compile time | Chappe | reliability issues, medium |
-| [Infer](https://fbinfer.com/) (RacerD) | 1.3.0 | data races | Chappe | reliability issues, high |
-| [japicmp](https://siom79.github.io/japicmp/) | 0.26.3 | incompatible changes against the last release | Chappe | a pull-request comment |
-| [ArchUnit](https://www.archunit.org/) | 1.5.1 | breaches of the architecture rules | Chappe's test suite | a failing build |
+| [Error Prone](https://errorprone.info/) | 2.50.0 | bug patterns, at compile time | Chappe, Foy | reliability issues, medium |
+| [Infer](https://fbinfer.com/) (RacerD) | 1.3.0 | data races | Chappe, Foy | reliability issues, high |
+| [japicmp](https://siom79.github.io/japicmp/) | 0.26.3 | incompatible changes against the last release | Chappe, Foy | a pull-request comment |
+| [ArchUnit](https://www.archunit.org/) | 1.5.1 | breaches of the architecture rules | Chappe's and Foy's test suites | a failing build |
 | [OWASP ZAP](https://www.zaproxy.org/) | 2.17.0 | vulnerabilities of the running server | Chappe, nightly | a red nightly, Slack |
 
 Every downloaded tool is a release at least two weeks old when it was chosen, checked by SHA-256 before it runs.
@@ -209,9 +209,9 @@ None of them sends a request to Maven Central.
 - SonarQube imports the reports through `sonar.sarifReportPaths`: **every SARIF result becomes a vulnerability**.
 - A scan that cannot be downloaded or fails is reported and skipped; it never stops the analysis.
 
-### Error Prone (Chappe)
+### Error Prone (Chappe, Foy)
 
-- Chappe's root `pom.xml` has an `errorprone` profile: `maven-compiler-plugin` with `-XDcompilePolicy=simple`,
+- The root `pom.xml` has an `errorprone` profile: `maven-compiler-plugin` with `-XDcompilePolicy=simple`,
   `--should-stop=ifError=FLOW` and
   `-Xplugin:ErrorProne -XepAllErrorsAsWarnings -XepExcludedPaths:.*(generated|generated-sources)/.* -XepDisableWarningsInGeneratedCode`,
   `error_prone_core` 2.50.0 on the annotation processor path. Every finding is a warning: none breaks the build.
@@ -221,8 +221,10 @@ None of them sends a request to Maven Central.
   and imports them through **SonarQube's generic format** as reliability issues of medium severity
   ([`sarif-to-generic.py`](https://codefloe.com/Vidocq/ci/src/branch/main/sonar-analysis/sarif-to-generic.py)),
   not through SARIF, which would make them vulnerabilities. Rule keys read `external_error-prone:<Check>`.
+- A module that sets its own `annotationProcessorPaths` would drop Error Prone's: the profile declares its
+  path with `combine.children="append"` (Foy's `foy-cdi-vauban` keeps Vauban's processor that way).
 
-### Infer's RacerD (Chappe)
+### Infer's RacerD (Chappe, Foy)
 
 - `infer: 'true'` in the workflow ([`infer.sh`](https://codefloe.com/Vidocq/ci/src/branch/main/sonar-analysis/infer.sh)).
 - Infer's Maven integration recompiles with `-source 11`, which Java 25 code refuses: the script runs javac
@@ -231,18 +233,18 @@ None of them sends a request to Maven Central.
 - Its findings become reliability issues of high severity, through the generic format.
 - Infer's Linux binary needs glibc 2.38 or later: hence the trixie job image.
 
-### japicmp: API compatibility (Chappe)
+### japicmp: API compatibility (Chappe, Foy)
 
-- In Chappe's `quality` profile: `japicmp-maven-plugin` 0.26.3, goal `cmp`, against the last release
+- In the `quality` profile: `japicmp-maven-plugin` 0.26.3, goal `cmp`, against the last release
   (`oldVersionPattern` `\d+\.\d+\.\d+`), `onlyModified`, `ignoreMissingOldVersion`, and no build break until
   1.0.0-RC1 makes it a gate ([#288](https://codefloe.com/Vidocq/vidocq/issues/288)).
 - `japicmp.skip` is `true` at the root. Each module that publishes an API sets it to `false` and lists its exported
   packages in `<includes>`, one by one, since an include matches its package only: `chappe-api`, `chappe-http`,
-  `chappe-core`.
+  `chappe-core`; `foy-api`, `foy-chappe`, `foy-cdi-vauban` (`foy-core` exports internal packages only).
 - A pull-request comment rather than SonarQube issues: SonarQube shows a pull request's issues on its changed
   lines only, and a removed method has no line left.
 
-### ArchUnit: architecture rules (Chappe)
+### ArchUnit: architecture rules (Chappe, Foy)
 
 - `com.tngtech.archunit:archunit` 1.5.1, test scope of `chappe-tests` only: the second test-scope exception to
   Chappe's zero-dependency rule, after JUnit ([#289](https://codefloe.com/Vidocq/vidocq/issues/289)). Its core runs
@@ -259,6 +261,10 @@ None of them sends a request to Maven Central.
 
 - `ArchitectureRulesTest` applies them to the shipped classes, after checking that the import found them;
   `ArchitectureRulesSelfTest` shows each rule failing on a fixture that breaks it. No baseline of accepted violations.
+- Foy keeps its rules in a test-only module, [`foy-architecture-tests`](https://codefloe.com/Vidocq/foy/src/branch/main/foy-architecture-tests):
+  the dependencies allowed to each shipped module (Chappe only through `chappe-api`, Vauban only in
+  `foy-cdi-vauban`), the layers of the `module-info.java` files, no reflection outside the four documented
+  fallbacks, no platform threads (an executor given a virtual-thread factory is allowed), no `ThreadLocal`.
 
 ### OWASP ZAP: nightly scan (Chappe)
 
@@ -276,14 +282,15 @@ None of them sends a request to Maven Central.
 | Repositories | SonarQube, JaCoCo, security scans | Error Prone | Infer | japicmp | ArchUnit | ZAP |
 |---|---|---|---|---|---|---|
 | chappe | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| cassini, cervantes, champollion, cyrano, dirac, foy, grimm, heisenberg, humboldt, ibarra, knock, mansart, peano, ravel, tassis, vauban, vidocq | ✓ | | | | | |
+| foy | ✓ | ✓ | ✓ | ✓ | ✓ | in progress |
+| cassini, cervantes, champollion, cyrano, dirac, grimm, heisenberg, humboldt, ibarra, knock, mansart, peano, ravel, tassis, vauban, verne, vidocq | ✓ | | | | | |
 | noether | pull request waiting ([noether#40](https://codefloe.com/Vidocq/noether/pulls/40)) | | | | | |
 
-Not analysed: `erasmus` (not wired yet), `verne` (empty), `vidocq-parent` (a POM), the sites
+Not analysed: `erasmus` (not wired yet), `vidocq-parent` (a POM), the sites
 (`pages`, `vidocq-docs`) and the repositories without a Java build.
 
-Chappe is the pilot: the other repositories get Error Prone, Infer, japicmp, ArchUnit and ZAP once Chappe's
-quality gate is green and its findings are cleaned up (#269, #285).
+Chappe was the pilot; Foy followed on 2026-10-22, once Chappe's quality gate was green. The other repositories
+follow one by one (#269), each findings backlog going to the clean-up campaign (#285).
 
 ## Reading the results
 
