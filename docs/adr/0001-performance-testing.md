@@ -81,17 +81,23 @@ commit SHA.
 
 ### The bench window
 
-macuntu also hosts the CI runner `RunnerMontreuil01`. They never run at the same time:
+macuntu also hosts two CI runners, `CodefloeRunnerMontreuil01` and `CodefloeRunnerMontreuil02`, each with its
+Docker-in-Docker container (`-dind`). Benchmarks and CI jobs never run at the same time:
 
 * a second runner on macuntu, `BenchMontreuil01`, carries the label `vidocq-bench` only, with a capacity of one job;
-* a systemd timer on the host opens the window every night at 00:30 UTC: it stops `RunnerMontreuil01` once its
-  running job, if any, has ended, sets governor and turbo, and starts `BenchMontreuil01`. At 02:45 UTC it closes the
-  window the other way round, so that `tck-nightly` (03:00 UTC) has both runners again. The Saturday window runs
-  until 06:00 UTC for the long runs;
+* a systemd timer on the host opens the window every night at 00:30 UTC: it stops both CI runners and their
+  `-dind` containers once their running jobs, if any, have ended, sets governor and turbo, and starts
+  `BenchMontreuil01`. At 02:45 UTC it closes the window the other way round, so that `tck-nightly` (03:00 UTC) has
+  every runner again. The Saturday window runs until 06:00 UTC for the long runs;
 * a bench workflow (`runs-on: vidocq-bench`) only ever finds a runner inside the window. A job dispatched during the
   day waits for the next window, so a release run needs no special handling;
-* the first step of every bench job checks that nothing else runs on the host (no other container, general runner
-  stopped) and aborts otherwise rather than produce a noisy figure.
+* the first step of every bench job checks that nothing else runs on the host (no other container, both CI runners
+  stopped) and aborts otherwise rather than produce a noisy figure. The harness keeps watching during the run: each
+  measurement records the CPU used by containers outside the benchmark, and a measurement disturbed above a
+  threshold is marked and left out of the published figures. The Chappe pilot of 2026-10-22, run outside any window,
+  showed why: a CI job started on `CodefloeRunnerMontreuil02` during the shootout (its `-dind` container at 304 %
+  CPU at the end of the run), and the last three servers measured fell far below the reference run; without a
+  timestamp per measurement, the link could not be proven.
 
 ### Cadence
 
@@ -224,8 +230,8 @@ follow.
 ## Consequences
 
 * No figure is produced on a machine shared with CI: a bench job either gets the window or aborts.
-* `RunnerMontreuil01` is offline about two hours and a quarter each night (five and a half on Saturday); Foix alone
-  takes CI jobs during that time.
+* `CodefloeRunnerMontreuil01` and `CodefloeRunnerMontreuil02` are offline about two hours and a quarter each night
+  (five and a half on Saturday); Foix alone takes CI jobs during that time.
 * A release waits for the next window to get its figures, at most one night.
 * The `BENCH.md` paragraph of `AGENTS.md`, and the "Ecosystem rules" summary of each repository's `AGENTS.md`, are
   updated with P2, when scheduled runs start.
