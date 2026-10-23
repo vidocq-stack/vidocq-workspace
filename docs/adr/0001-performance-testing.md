@@ -84,11 +84,16 @@ commit SHA.
 macuntu also hosts two CI runners, `CodefloeRunnerMontreuil01` and `CodefloeRunnerMontreuil02`, each with its
 Docker-in-Docker container (`-dind`). Benchmarks and CI jobs never run at the same time:
 
-* a second runner on macuntu, `BenchMontreuil01`, carries the label `vidocq-bench` only, with a capacity of one job;
-* a systemd timer on the host opens the window every night at 00:30 UTC: it stops both CI runners and their
-  `-dind` containers once their running jobs, if any, have ended, sets governor and turbo, and starts
-  `BenchMontreuil01`. At 02:45 UTC it closes the window the other way round, so that `tck-nightly` (03:00 UTC) has
-  every runner again. The Saturday window runs until 06:00 UTC for the long runs;
+* a third runner on macuntu, `BenchMontreuil01`, carries the label `vidocq-bench` only, with a capacity of one job,
+  and runs only inside the window;
+* a scheduled workflow of `Vidocq/ci` opens the window every night at 00:30 UTC, through the Portainer API of
+  macuntu (`ci/bench-window`): it stops both CI runners and their `-dind` containers once their running jobs, if
+  any, have ended (the runners need `runner.shutdown_timeout`), sets governor and turbo from a short-lived
+  privileged container, and starts `BenchMontreuil01`. At 02:45 UTC it closes the window the other way round, so
+  that `tck-nightly` (03:00 UTC) has every runner again. The Saturday window runs until 06:00 UTC for the long runs.
+  The workflow runs on the Foix runner (label `vidocq-foix`), not on a runner it stops; it is the only one to hold
+  the Portainer token, which is root on macuntu. Nothing is installed on the host, and the window is versioned
+  and visible in the CI;
 * a bench workflow (`runs-on: vidocq-bench`) only ever finds a runner inside the window. A job dispatched during the
   day waits for the next window, so a release run needs no special handling;
 * the first step of every bench job checks that nothing else runs on the host (no other container, both CI runners
@@ -216,7 +221,7 @@ follow.
 
 ### Rollout
 
-1. **P0 — Machine and noise.** `BenchMontreuil01` and the window timer; ten identical runs to get each benchmark's
+1. **P0 — Machine and noise.** `BenchMontreuil01` and the window workflow; ten identical runs to get each benchmark's
    noise band. Document the Grafana stack of the Foix Portainer (version, compose) in the CI rebuild runbook.
 2. **P1 — One end-to-end chain on two pilots.** A shared action `ci/run-bench` (run, fingerprint, push to
    `Vidocq/bench-results`), the importer, the schema, the data source and a first dashboard, then `ci/bench-report`
