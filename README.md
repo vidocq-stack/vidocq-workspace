@@ -21,7 +21,7 @@ this repo only ever tracks the shared Claude config.
 ├── CLAUDE.md                ← `@AGENTS.md` + Claude Code specific tooling
 ├── mani.yaml                ← mani orchestration: project list + cross-repo tasks
 ├── .githooks/               ← shared git hooks (DCO sign-off)
-├── docs/                    ← workspace guides (getting started, mani & worktrees)
+├── docs/                    ← workspace guides (getting started, mani & worktrees, changes across repositories)
 ├── .gitignore               ← ignores the nested project clones + local/secret files
 ├── README.md
 │
@@ -73,6 +73,10 @@ both roles are in the [governance repository](https://codefloe.com/Vidocq/govern
 
 See **[docs/working-with-mani-and-worktrees.md](docs/working-with-mani-and-worktrees.md)**
 for the mani use cases, the worktree workflow, git hooks, and IntelliJ setup.
+
+A change that several repositories must take together, such as a brick changing an API its
+consumers use, is merged with companion branches: see
+**[docs/changes-across-repositories.md](docs/changes-across-repositories.md)**.
 
 How the code is measured (the SonarQube server, the CI action that feeds it, the tools plugged
 into it and their settings) is in **[QUALITY.md](QUALITY.md)**.

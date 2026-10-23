@@ -82,6 +82,10 @@ git worktree list
 git worktree remove ../feature/123-foo                        # when done
 ```
 
+A change spanning several repositories takes the same branch name in each of them
+(`BRANCH=feature/123-foo mani run wt-add -p vauban,vidocq`), so that the CI rebuilds
+the consumers on it: see [Changes across repositories](changes-across-repositories.md).
+
 Branch names with slashes create nested dirs (`vauban/feature/123-foo/`) — the
 directory still mirrors the branch name. Note the consequence: **a checkout's
 depth below the workspace root is not constant** — `main/` sits one level under

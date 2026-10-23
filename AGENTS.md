@@ -23,7 +23,7 @@ The ecosystem spans several groups of repositories (all under the `Vidocq` organ
 
 Logical dependency graph: the foundational bricks (`chappe` + `vauban` + `champollion`) have no dependencies between them; `foy`, `cassini` and `mansart` compose them; `noether` provides Persistence with optional Vauban integration and uses Mansart's pool/transactions; `peano` stands alone on the `jakarta.el` API, and `ibarra` composes `foy` + `peano`; `bodoni` depends only on the JSTL API (Pages, Servlet and EL APIs `provided`), and its runtime extension assembles it with `ibarra` + `peano`; the MicroProfile bricks build on `vauban` (CDI) and, depending on the case, on `cassini` or `chappe`; and `vidocq` orchestrates the whole via an extension SPI inspired by Quarkus and carries the MicroProfile 7.1 certification of the assembled runtime.
 
-**Multi-repo impact**: before modifying a foundational brick, check its consumers via `GestionProjet/graph/inverted.json` — a change in `vauban` ripples through almost the entire workspace.
+**Multi-repo impact**: before modifying a foundational brick, check its consumers via `GestionProjet/graph/inverted.json` — a change in `vauban` ripples through almost the entire workspace. A change its consumers must follow (a removed or changed API) goes on **one branch name in every repository involved** (companion branches): the producer's `pr-validate` then rebuilds each consumer on that branch instead of its `main`, and the merges follow the dependency order. Never lift a branch protection to merge around a red consumer. Workflow: `docs/changes-across-repositories.md`.
 
 ## Workspace orchestration
 
