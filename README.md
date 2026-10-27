@@ -80,6 +80,8 @@ consumers use, is merged with companion branches: see
 
 How the code is measured (the SonarQube server, the CI action that feeds it, the tools plugged
 into it and their settings) is in **[QUALITY.md](QUALITY.md)**.
+Where each component stands on its SonarQube cleanup and its performance work (done, in
+progress, to do) is tracked in **[OPTIMS.md](OPTIMS.md)**.
 
 ## What's shared
 
