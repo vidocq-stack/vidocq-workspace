@@ -10,14 +10,14 @@ How the tables are kept:
 
 ## At a glance
 
-SonarQube snapshot of 2026-10-27, branch `main`. Ratings: reliability / security / security review / maintainability.
+SonarQube snapshot of 2026-10-27 (evening), branch `main`. Ratings: reliability / security / security review / maintainability.
 
 | Component | Gate | Ratings | Open issues | Coverage | Sonar cleanup | Performance |
 |---|---|---|---|---|---|---|
 | chappe | OK | A / A / A / A | 0 | 82.1 % | done | done for now, see below |
-| cassini | ERROR (fix in #84) | A / D / A / A | 283 | 57.3 % | in progress | in progress |
+| cassini | OK | A / A / A / A | 280 | 57.3 % | in progress (smells, coverage) | in progress |
 | champollion | OK | C / C / A / A | 402 | 68.0 % | to do | in progress |
-| vidocq (runtime) | OK | E / D / E / A | 1074 | 83.0 % | in progress (#387, #388) | — |
+| vidocq (runtime) | OK | A / A / A / A | 632 | 83.0 % | in progress (smells) | — |
 | vauban | OK | A / A / A / A | 0 | 86.1 % | done | to do (small) |
 | foy | OK | A / A / A / A | 0 | 86.5 % | done | not started |
 | bodoni | OK | A / A / A / A | 0 | 92.4 % | done | not started |
@@ -52,13 +52,15 @@ Pitfalls met:
 - The PR analysis counts as *new* every line that differs from `main`, so an old finding on a line we only touched cosmetically comes back as new. A line that cannot be fixed goes back to `main`'s exact text rather than getting a `NOSONAR`.
 - A green gate is not a clean project: the gate only looks at new code. Check the overall ratings too.
 - Removing a constant can make its literal count as duplicated elsewhere (`S1192`); method splits can leave unused parameters (`S1172`) that only the `main` analysis reports.
+- Replacing a literal by a constant puts its whole method in the diff: a long method then brings its old cognitive complexity (`S3776`) back as new. Split it in the same pull request.
+- External analysers (Opengrep) may publish their findings only on some analyses: a project can drop from security A to D between two runs with no code change. Review them, fix or mark them.
 
 | Component | Done | Left |
 |---|---|---|
 | chappe | Pilot, 0 issues (chappe#50 and earlier). | Keep it at 0. |
-| cassini | #79 request path; #80 tests (coverage 63 % → gate OK); #81; #82 bugs and vulnerabilities (XXE, interrupt flag, record equality); #83 about 160 smells plus 15 `S3776` splits; 10 false positives and 2 safe hotspots marked (2026-10-27). Issues 500 → 283, reliability C → A, security review E → A. | #84 (2 unused parameters, owner-only upload file → security A expected). Then `S3776`, `S135`, `S112`, the `S7467` catches no test reaches, coverage 57 % → 80 %. |
+| cassini | #79 request path; #80 tests (coverage 63 % → gate OK); #81; #82 bugs and vulnerabilities (XXE, interrupt flag, record equality); #83 about 160 smells plus 15 `S3776` splits; #84 owner-only upload file, #85 unused parameters; 10 false positives and 2 safe hotspots marked. Issues 500 → 280, ratings C/E/E/A → A/A/A/A. | `S3776`, `S135`, `S112`, the `S7467` catches no test reaches; coverage 57 % → 80 %. |
 | champollion | #37 mechanical pass with tests; #39 `S1192` that turned the gate red. | Whole project: 402 issues, reliability and security C. Seven files with out-of-scope findings were left out of #37 (BUG-20261027-01..04). |
-| vidocq (runtime) | #384 gate fix; #385 mechanical pass on files without other findings. | #387 (20 vulnerabilities, 84 of 85 bugs) and #388 (smells) open; then the 14 hotspots to review, the 174 `S7467` catches no test reaches, `S3776`, `S135`, `S6813`. |
+| vidocq (runtime) | #384 gate fix; #385 mechanical pass; #387 20 vulnerabilities and 84 of 85 bugs; #388 smells; #389, #390 literals the cleanup turned into constants; 14 safe hotspots and 16 false positives (Opengrep, one `S3077`) marked after review. Issues 1303 → 632, ratings E/D/E/A → A/A/A/A. | The 174 `S7467` catches no test reaches, `S3776`, `S135`, `S6813` (field injection CDI needs), test-source smells. |
 | vauban, foy, bodoni | Clean. | Keep them at 0. |
 | other components | — | Not started. Largest: noether (1187), mansart (561), ibarra (504), tassis (350). |
 
@@ -76,7 +78,6 @@ Origin: the cross-runtime shootout of `vidocq-benchmarks` (Todo API, wrk2, 100 c
 
 ## Next
 
-1. Merge cassini#84 and vidocq#387/#388; mark the runtime's remaining hotspots after review.
-2. Cassini's remaining request-path copies (list above), then a new measurement.
-3. Champollion's whole-project Sonar pass.
-4. Then the next components by size of their backlog, MicroProfile ones first where the gate is about to be used.
+1. Cassini's remaining request-path copies (list above), then a new measurement.
+2. Champollion's whole-project Sonar pass (reliability and security C).
+3. Then the next components by size of their backlog, MicroProfile ones first where the gate is about to be used.
