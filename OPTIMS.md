@@ -10,29 +10,29 @@ How the tables are kept:
 
 ## At a glance
 
-SonarQube snapshot of 2026-10-27 (evening), branch `main`. Ratings: reliability / security / security review / maintainability.
+SonarQube snapshot of 2026-10-28 (morning), branch `main`. Ratings: reliability / security / security review / maintainability. Target for the Jakarta EE Core, MicroProfile and Jakarta Data bricks: A everywhere and coverage of at least 80 % (TCK runs are not counted).
 
 | Component | Gate | Ratings | Open issues | Coverage | Sonar cleanup | Performance |
 |---|---|---|---|---|---|---|
 | chappe | OK | A / A / A / A | 0 | 82.1 % | done | done for now, see below |
-| cassini | OK | A / A / A / A | 280 | 57.3 % | in progress (smells, coverage) | in progress |
-| champollion | OK | C / C / A / A | 402 | 68.0 % | to do | in progress |
-| vidocq (runtime) | OK | A / A / A / A | 632 | 83.0 % | in progress (smells) | — |
+| cassini | OK | A / A / A / A | 228 | 83.1 % | done (smells left) | in progress |
+| champollion | OK | A / A / A / A | 267 | 90.7 % | done (smells left) | in progress |
+| vidocq (runtime) | OK | A / A / A / A | 632 | 83.0 % | done (smells left) | — |
 | vauban | OK | A / A / A / A | 0 | 86.1 % | done | to do (small) |
 | foy | OK | A / A / A / A | 0 | 86.5 % | done | not started |
 | bodoni | OK | A / A / A / A | 0 | 92.4 % | done | not started |
 | verne | OK | A / A / A / A | 0 | — | done (empty) | — |
-| knock | OK | A / A / A / A | 16 | 82.8 % | to do (small) | not started |
-| ravel | OK | A / C / A / A | 170 | 66.7 % | not started | not started |
+| knock | OK | A / A / A / A | 16 | 82.8 % | done (smells left) | not started |
+| ravel | OK | A / A / A / A | 56 | 92.1 % | done (smells left) | not started |
+| cervantes | OK | A / A / A / A | 7 | 91.2 % | done | not started |
+| dirac | OK | A / A / A / A | 5 | 92.0 % | done | not started |
+| grimm | OK | A / A / A / A | 150 | 95.4 % | done (smells left) | not started |
+| heisenberg | OK | A / A / A / A | 72 | 91.4 % | done (smells left) | not started |
+| cyrano | OK | A / A / A / A | 147 | 89.9 % | done (smells left) | not started |
+| humboldt | OK | A / A / A / A | 73 | 92.4 % | done (smells left) | not started |
+| mansart | OK | A / C / A / A | 503 | 83.9 % | in progress (one security fix) | not started |
 | peano | OK | C / A / A / A | 197 | 76.9 % | not started | not started |
-| cervantes | OK | C / C / A / A | 68 | 66.9 % | not started | not started |
-| dirac | OK | C / C / A / A | 87 | 68.2 % | not started | not started |
-| grimm | OK | C / C / A / A | 249 | 60.4 % | not started | not started |
-| heisenberg | OK | C / C / E / A | 179 | 53.9 % | not started | not started |
-| cyrano | OK | E / C / A / A | 214 | 64.0 % | not started | not started |
-| humboldt | OK | E / A / E / A | 159 | 65.6 % | not started | not started |
 | ibarra | OK | C / D / E / A | 504 | 85.4 % | not started | not started |
-| mansart | OK | C / D / E / A | 561 | 43.9 % | not started | not started |
 | tassis | OK | E / D / A / A | 350 | 86.1 % | not started | not started |
 | noether | OK | C / D / A / A | 1187 | 81.1 % | not started | not started |
 
@@ -58,11 +58,20 @@ Pitfalls met:
 | Component | Done | Left |
 |---|---|---|
 | chappe | Pilot, 0 issues (chappe#50 and earlier). | Keep it at 0. |
-| cassini | #79 request path; #80 tests (coverage 63 % → gate OK); #81; #82 bugs and vulnerabilities (XXE, interrupt flag, record equality); #83 about 160 smells plus 15 `S3776` splits; #84 owner-only upload file, #85 unused parameters; 10 false positives and 2 safe hotspots marked. Issues 500 → 280, ratings C/E/E/A → A/A/A/A. | `S3776`, `S135`, `S112`, the `S7467` catches no test reaches; coverage 57 % → 80 %. |
-| champollion | #37 mechanical pass with tests; #39 `S1192` that turned the gate red. | Whole project: 402 issues, reliability and security C. Seven files with out-of-scope findings were left out of #37 (BUG-20261027-01..04). |
-| vidocq (runtime) | #384 gate fix; #385 mechanical pass; #387 20 vulnerabilities and 84 of 85 bugs; #388 smells; #389, #390 literals the cleanup turned into constants; 14 safe hotspots and 16 false positives (Opengrep, one `S3077`) marked after review. Issues 1303 → 632, ratings E/D/E/A → A/A/A/A. | The 174 `S7467` catches no test reaches, `S3776`, `S135`, `S6813` (field injection CDI needs), test-source smells. |
+| cassini | #79–#85 cleanup (500 → 280 issues, C/E/E/A → A/A/A/A); coverage passes #87 (core API), #88 (client), #90 (multipart, Maven plugin, test harness, SSE, `UriInfo`), 57 % → 83 %, with 21 spec bugs fixed (CASSINI-009..031); #89 escaping of generated string literals (CASSINI-025). | `S3776`, `S135`, `S112`; processor, cdi and jdk-http modules below 80 %. |
+| champollion | #37, #39 mechanical; #41 the 25 bugs (C → A); #42 about 85 smells; #43 coverage 68 % → 91 % with ten JSON-B / protobuf bugs fixed; 6 Opengrep false positives marked. | 66 `S3776`; BUG-20261028-01, -04, -05, -06 open (each needs a method split first). |
+| vidocq (runtime) | #384–#390 (1303 → 632 issues, E/D/E/A → A/A/A/A); hotspots and false positives marked. | The 174 `S7467` catches no test reaches, `S3776`, `S135`, `S6813`. |
 | vauban, foy, bodoni | Clean. | Keep them at 0. |
-| other components | — | Not started. Largest: noether (1187), mansart (561), ibarra (504), tassis (350). |
+| cervantes | #38: CERV-009 (raw token in `toString`), coverage 67 % → 91 %, smells 68 → 7; JWE/JCA false positives marked. | `S6813` (field injection), `S1133`. |
+| dirac | #36: DRC-007 (metrics registered twice), coverage 68 % → 92 %, smells 87 → 5. | `S6813` on interceptors (Vauban refuses an `@Inject` constructor on an interceptor: to check in Vauban). |
+| heisenberg | #46: BUG-011..013 (lost counter updates under load, missing `uses` in `module-info`), coverage 54 % → 91 %. | 5 `S3776`, `S1181` in the engines (deliberate). |
+| ravel | #37: coverage 67 % → 92 %, 112 issues fixed. | `S6548` singletons, `S3011` (needed). |
+| cyrano | #47: three bugs (duplicate `@ClientHeaderParam`, wrapped interceptor exceptions, case-sensitive `Content-Type`), coverage 64 % → 90 %. | About 30 `S3776`/`S135`; `CyranoRestClientInstanceSyntheticCreator` looks dead. |
+| humboldt | #36: three metrics bugs (observable counters added up, double final export, `join` timeout), coverage 66 % → 92 %. | `S3776`, `S106` (logging exporters). |
+| grimm | #36: six OpenAPI bugs (YAML reader rewritten, path joining, OAuth flows…), coverage 60 % → 95 %. | 45 `S3776`, `S1168`. |
+| mansart | #53: twelve Jakarta Data bugs (MANSART-010..022: `findFirst`, CRUD inserts, `@By`, projections, batch methods…), coverage 44 % → 84 %, reliability C → A. | One real finding: a JDQL literal can name any class to load (dev console path), fix in progress; about 500 smells. |
+| knock | — | 16 smells. |
+| other components | — | Not in the Core / MicroProfile / Data scope: peano, ibarra, tassis, noether. |
 
 ## Performance work
 
@@ -78,6 +87,7 @@ Origin: the cross-runtime shootout of `vidocq-benchmarks` (Todo API, wrk2, 100 c
 
 ## Next
 
-1. Cassini's remaining request-path copies (list above), then a new measurement.
-2. Champollion's whole-project Sonar pass (reliability and security C).
-3. Then the next components by size of their backlog, MicroProfile ones first where the gate is about to be used.
+1. Mansart's JDQL enum-literal fix (the last security finding of the scope).
+2. The remaining smells, `S3776` method splits first, on well-tested code only.
+3. Cassini's remaining request-path copies, then a new performance measurement.
+4. The components outside the scope (peano, ibarra, tassis, noether) when they come back into focus.
