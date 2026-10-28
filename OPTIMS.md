@@ -19,7 +19,7 @@ Since 2026-10-28 the SonarQube check is **blocking** on these fifteen repositori
 | chappe | OK | A / A / A / A | 0 | 82.1 % | done | done for now, see below |
 | cassini | OK | A / A / A / A | 0 | 84.5 % | done | in progress |
 | champollion | OK | A / A / A / A | 0 | 91.3 % | done | in progress |
-| vidocq (runtime) | OK | A / A / A / A | 0 | 85.1 % | done | — |
+| vidocq (runtime) | OK | A / A / A / A | 0 | 85.3 % | done | — |
 | vauban | OK | A / A / A / A | 0 | 86.1 % | done | to do (small) |
 | foy | OK | A / A / A / A | 0 | 86.5 % | done | not started |
 | bodoni | OK | A / A / A / A | 0 | 92.4 % | done | not started |
