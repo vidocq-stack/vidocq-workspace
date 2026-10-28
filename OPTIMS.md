@@ -10,27 +10,29 @@ How the tables are kept:
 
 ## At a glance
 
-SonarQube snapshot of 2026-10-28 (morning), branch `main`. Ratings: reliability / security / security review / maintainability. Target for the Jakarta EE Core, MicroProfile and Jakarta Data bricks: A everywhere and coverage of at least 80 % (TCK runs are not counted).
+SonarQube snapshot of 2026-10-28 (evening), branch `main`. Ratings: reliability / security / security review / maintainability. Target for the Jakarta EE Core, MicroProfile and Jakarta Data bricks: A everywhere, coverage of at least 80 % (TCK runs are not counted) and no open issue. All fifteen bricks of that scope reach it.
+
+Since 2026-10-28 the SonarQube check is **blocking** on these fifteen repositories: `blocking: 'true'` on the `Vidocq/ci` sonar action and `sonar / sonar (pull_request)` among the required checks of `main`. The server's default profile and gate are "Vidocq way": Sonar way, with field injection (`java:S6813`) lowered to INFO, and a gate that fails on new issues of LOW severity and above, so INFO findings show without blocking.
 
 | Component | Gate | Ratings | Open issues | Coverage | Sonar cleanup | Performance |
 |---|---|---|---|---|---|---|
 | chappe | OK | A / A / A / A | 0 | 82.1 % | done | done for now, see below |
-| cassini | OK | A / A / A / A | 228 | 83.1 % | done (smells left) | in progress |
-| champollion | OK | A / A / A / A | 267 | 90.7 % | done (smells left) | in progress |
-| vidocq (runtime) | OK | A / A / A / A | 632 | 83.0 % | done (smells left) | — |
+| cassini | OK | A / A / A / A | 0 | 84.5 % | done | in progress |
+| champollion | OK | A / A / A / A | 0 | 91.3 % | done | in progress |
+| vidocq (runtime) | OK | A / A / A / A | 0 | 85.1 % | done | — |
 | vauban | OK | A / A / A / A | 0 | 86.1 % | done | to do (small) |
 | foy | OK | A / A / A / A | 0 | 86.5 % | done | not started |
 | bodoni | OK | A / A / A / A | 0 | 92.4 % | done | not started |
 | verne | OK | A / A / A / A | 0 | — | done (empty) | — |
-| knock | OK | A / A / A / A | 16 | 82.8 % | done (smells left) | not started |
-| ravel | OK | A / A / A / A | 56 | 92.1 % | done (smells left) | not started |
-| cervantes | OK | A / A / A / A | 7 | 91.2 % | done | not started |
-| dirac | OK | A / A / A / A | 5 | 92.0 % | done | not started |
-| grimm | OK | A / A / A / A | 150 | 95.4 % | done (smells left) | not started |
-| heisenberg | OK | A / A / A / A | 72 | 91.4 % | done (smells left) | not started |
-| cyrano | OK | A / A / A / A | 147 | 89.9 % | done (smells left) | not started |
-| humboldt | OK | A / A / A / A | 73 | 92.4 % | done (smells left) | not started |
-| mansart | OK | A / A / A / A | 495 | 84.2 % | done (smells left) | not started |
+| knock | OK | A / A / A / A | 0 | 82.6 % | done | not started |
+| ravel | OK | A / A / A / A | 0 | 92.8 % | done | not started |
+| cervantes | OK | A / A / A / A | 0 | 91.2 % | done | not started |
+| dirac | OK | A / A / A / A | 0 | 91.9 % | done | not started |
+| grimm | OK | A / A / A / A | 0 | 95.6 % | done | not started |
+| heisenberg | OK | A / A / A / A | 0 | 91.7 % | done | not started |
+| cyrano | OK | A / A / A / A | 0 | 90.1 % | done | not started |
+| humboldt | OK | A / A / A / A | 0 | 92.5 % | done | not started |
+| mansart | OK | A / A / A / A | 0 | 86.6 % | done | not started |
 | peano | OK | C / A / A / A | 197 | 76.9 % | not started | not started |
 | ibarra | OK | C / D / E / A | 504 | 85.4 % | not started | not started |
 | tassis | OK | E / D / A / A | 350 | 86.1 % | not started | not started |
@@ -54,23 +56,25 @@ Pitfalls met:
 - Removing a constant can make its literal count as duplicated elsewhere (`S1192`); method splits can leave unused parameters (`S1172`) that only the `main` analysis reports.
 - Replacing a literal by a constant puts its whole method in the diff: a long method then brings its old cognitive complexity (`S3776`) back as new. Split it in the same pull request.
 - External analysers (Opengrep) may publish their findings only on some analyses: a project can drop from security A to D between two runs with no code change. Review them, fix or mark them.
+- The `main` analysis finds what a PR analysis cannot: moving a method's only caller brings `S3398` ("move this method into…") on `main` after the merge. Plan a small follow-up PR after each large one.
+- With the blocking gate, marking a deliberate finding in the PR analysis turns the gate green, but the failed `sonar` job stays red (Forgejo has no job rerun API): push a new commit to run it again.
 
 | Component | Done | Left |
 |---|---|---|
-| chappe | Pilot, 0 issues (chappe#50 and earlier). | Keep it at 0. |
-| cassini | #79–#85 cleanup (500 → 280 issues, C/E/E/A → A/A/A/A); coverage passes #87 (core API), #88 (client), #90 (multipart, Maven plugin, test harness, SSE, `UriInfo`), 57 % → 83 %, with 21 spec bugs fixed (CASSINI-009..031); #89 escaping of generated string literals (CASSINI-025). | `S3776`, `S135`, `S112`; processor, cdi and jdk-http modules below 80 %. |
-| champollion | #37, #39 mechanical; #41 the 25 bugs (C → A); #42 about 85 smells; #43 coverage 68 % → 91 % with ten JSON-B / protobuf bugs fixed; 6 Opengrep false positives marked. | 66 `S3776`; BUG-20261028-01, -04, -05, -06 open (each needs a method split first). |
-| vidocq (runtime) | #384–#390 (1303 → 632 issues, E/D/E/A → A/A/A/A); hotspots and false positives marked. | The 174 `S7467` catches no test reaches, `S3776`, `S135`, `S6813`. |
-| vauban, foy, bodoni | Clean. | Keep them at 0. |
-| cervantes | #38: CERV-009 (raw token in `toString`), coverage 67 % → 91 %, smells 68 → 7; JWE/JCA false positives marked. | `S6813` (field injection), `S1133`. |
-| dirac | #36: DRC-007 (metrics registered twice), coverage 68 % → 92 %, smells 87 → 5. | `S6813` on interceptors (Vauban refuses an `@Inject` constructor on an interceptor: to check in Vauban). |
-| heisenberg | #46: BUG-011..013 (lost counter updates under load, missing `uses` in `module-info`), coverage 54 % → 91 %. | 5 `S3776`, `S1181` in the engines (deliberate). |
-| ravel | #37: coverage 67 % → 92 %, 112 issues fixed. | `S6548` singletons, `S3011` (needed). |
-| cyrano | #47: three bugs (duplicate `@ClientHeaderParam`, wrapped interceptor exceptions, case-sensitive `Content-Type`), coverage 64 % → 90 %. | About 30 `S3776`/`S135`; `CyranoRestClientInstanceSyntheticCreator` looks dead. |
-| humboldt | #36: three metrics bugs (observable counters added up, double final export, `join` timeout), coverage 66 % → 92 %. | `S3776`, `S106` (logging exporters). |
-| grimm | #36: six OpenAPI bugs (YAML reader rewritten, path joining, OAuth flows…), coverage 60 % → 95 %. | 45 `S3776`, `S1168`. |
-| mansart | #53: twelve Jakarta Data bugs (MANSART-010..022: `findFirst`, CRUD inserts, `@By`, projections, batch methods…), coverage 44 % → 84 %, reliability C → A; #54 MANSART-023: a JDQL literal could name a class to load (dev console path), now resolved against the model. | About 500 smells. |
-| knock | — | 16 smells. |
+| chappe | Pilot, 0 issues (chappe#50 and earlier); #72 blocking gate. | Keep it at 0. |
+| cassini | #79–#85 cleanup (500 → 280 issues, C/E/E/A → A/A/A/A); coverage passes #87 (core API), #88 (client), #90 (multipart, Maven plugin, test harness, SSE, `UriInfo`), 57 % → 83 %, with 21 spec bugs fixed (CASSINI-009..031); #89 escaping of generated string literals (CASSINI-025); #91 zero-issues pass and blocking gate; #92 the last three findings of the `main` analysis. | Keep it at 0; processor, cdi and jdk-http modules below 80 % on their own. |
+| champollion | #37, #39 mechanical; #41 the 25 bugs (C → A); #42 about 85 smells; #43 coverage 68 % → 91 % with ten JSON-B / protobuf bugs fixed; #44 zero-issues pass (four more JSON-B bugs) and blocking gate; #45 the findings of the `main` analysis; Opengrep false positives marked. | Keep it at 0. |
+| vidocq (runtime) | #384–#390 (1303 → 632 issues, E/D/E/A → A/A/A/A); #391 zero-issues pass and blocking gate; #392 the findings left on `main`; #393 the langchain4j-cdi MCP extension; deliberate findings (CLI output of the jlink/jpackage goals, stub servers that sleep on purpose…) marked with their reason. | Keep it at 0. |
+| vauban, foy, bodoni | Clean; vauban#226 and foy#87 blocking gate. | Keep them at 0. |
+| cervantes | #38: CERV-009 (raw token in `toString`), coverage 67 % → 91 %, smells 68 → 7; JWE/JCA false positives marked; zero-issues pass and blocking gate. | Keep it at 0. |
+| dirac | #36: DRC-007 (metrics registered twice), coverage 68 % → 92 %, smells 87 → 5; #37 zero-issues pass and blocking gate. | Vauban refuses an `@Inject` constructor on an interceptor (to check in Vauban); field injection is INFO in "Vidocq way". |
+| heisenberg | #46: BUG-011..013 (lost counter updates under load, missing `uses` in `module-info`), coverage 54 % → 91 %; #47 zero-issues pass and blocking gate; #48 policy-chain helpers kept inside `Chain`. | `S107` on the public `FtMetricsRecorder.register` SPI is marked, pending a decision on the SPI shape. |
+| ravel | #37: coverage 67 % → 92 %, 112 issues fixed; #38 zero-issues pass and blocking gate. | Keep it at 0. |
+| cyrano | #47: three bugs (duplicate `@ClientHeaderParam`, wrapped interceptor exceptions, case-sensitive `Content-Type`), coverage 64 % → 90 %; #48 zero-issues pass and blocking gate. | Keep it at 0. |
+| humboldt | #36: three metrics bugs (observable counters added up, double final export, `join` timeout), coverage 66 % → 92 %; #37, #38 zero-issues pass and blocking gate. | Keep it at 0. |
+| grimm | #36: six OpenAPI bugs (YAML reader rewritten, path joining, OAuth flows…), coverage 60 % → 95 %; #37, #38 zero-issues pass and blocking gate. | Keep it at 0. |
+| mansart | #53: twelve Jakarta Data bugs (MANSART-010..022: `findFirst`, CRUD inserts, `@By`, projections, batch methods…), coverage 44 % → 84 %, reliability C → A; #54 MANSART-023: a JDQL literal could name a class to load (dev console path), now resolved against the model; #55 zero-issues pass and blocking gate; #56 the findings of the `main` analysis. | Keep it at 0. |
+| knock | #46 zero-issues pass and blocking gate. | Keep it at 0. |
 | other components | — | Not in the Core / MicroProfile / Data scope: peano, ibarra, tassis, noether. |
 
 ## Performance work
@@ -87,6 +91,6 @@ Origin: the cross-runtime shootout of `vidocq-benchmarks` (Todo API, wrk2, 100 c
 
 ## Next
 
-1. The remaining smells, `S3776` method splits first, on well-tested code only.
+1. Keep the fifteen in-scope bricks at 0 issues: the blocking gate refuses any pull request that adds one.
 2. Cassini's remaining request-path copies, then a new performance measurement.
 3. The components outside the scope (peano, ibarra, tassis, noether) when they come back into focus.
