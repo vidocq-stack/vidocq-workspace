@@ -30,7 +30,7 @@ SonarQube snapshot of 2026-10-28 (morning), branch `main`. Ratings: reliability 
 | heisenberg | OK | A / A / A / A | 72 | 91.4 % | done (smells left) | not started |
 | cyrano | OK | A / A / A / A | 147 | 89.9 % | done (smells left) | not started |
 | humboldt | OK | A / A / A / A | 73 | 92.4 % | done (smells left) | not started |
-| mansart | OK | A / C / A / A | 503 | 83.9 % | in progress (one security fix) | not started |
+| mansart | OK | A / A / A / A | 495 | 84.2 % | done (smells left) | not started |
 | peano | OK | C / A / A / A | 197 | 76.9 % | not started | not started |
 | ibarra | OK | C / D / E / A | 504 | 85.4 % | not started | not started |
 | tassis | OK | E / D / A / A | 350 | 86.1 % | not started | not started |
@@ -69,7 +69,7 @@ Pitfalls met:
 | cyrano | #47: three bugs (duplicate `@ClientHeaderParam`, wrapped interceptor exceptions, case-sensitive `Content-Type`), coverage 64 % → 90 %. | About 30 `S3776`/`S135`; `CyranoRestClientInstanceSyntheticCreator` looks dead. |
 | humboldt | #36: three metrics bugs (observable counters added up, double final export, `join` timeout), coverage 66 % → 92 %. | `S3776`, `S106` (logging exporters). |
 | grimm | #36: six OpenAPI bugs (YAML reader rewritten, path joining, OAuth flows…), coverage 60 % → 95 %. | 45 `S3776`, `S1168`. |
-| mansart | #53: twelve Jakarta Data bugs (MANSART-010..022: `findFirst`, CRUD inserts, `@By`, projections, batch methods…), coverage 44 % → 84 %, reliability C → A. | One real finding: a JDQL literal can name any class to load (dev console path), fix in progress; about 500 smells. |
+| mansart | #53: twelve Jakarta Data bugs (MANSART-010..022: `findFirst`, CRUD inserts, `@By`, projections, batch methods…), coverage 44 % → 84 %, reliability C → A; #54 MANSART-023: a JDQL literal could name a class to load (dev console path), now resolved against the model. | About 500 smells. |
 | knock | — | 16 smells. |
 | other components | — | Not in the Core / MicroProfile / Data scope: peano, ibarra, tassis, noether. |
 
@@ -87,7 +87,6 @@ Origin: the cross-runtime shootout of `vidocq-benchmarks` (Todo API, wrk2, 100 c
 
 ## Next
 
-1. Mansart's JDQL enum-literal fix (the last security finding of the scope).
-2. The remaining smells, `S3776` method splits first, on well-tested code only.
-3. Cassini's remaining request-path copies, then a new performance measurement.
-4. The components outside the scope (peano, ibarra, tassis, noether) when they come back into focus.
+1. The remaining smells, `S3776` method splits first, on well-tested code only.
+2. Cassini's remaining request-path copies, then a new performance measurement.
+3. The components outside the scope (peano, ibarra, tassis, noether) when they come back into focus.
