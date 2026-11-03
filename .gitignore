@@ -43,8 +43,8 @@ tokens*.env
 # mani #
 verne/main
 tassis/main
-ibarra/main
 bodoni/main
+ibarra/main
 peano/main
 erasmus/main
 grimm/main
