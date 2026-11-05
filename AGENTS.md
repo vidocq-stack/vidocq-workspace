@@ -70,6 +70,23 @@ Cross-cutting rules that apply to **all** projects, unless an explicitly documen
 
 SonarQube analyses every Java repository on each push to `main` and each pull request; the tools plugged into the analysis, their settings and the pitfalls met so far are in `QUALITY.md`. The analysis runs in report mode: a red quality gate does not block a merge, but it turns `main`'s gate red. Read the SonarQube comment of a pull request before merging it, and leave no new issue behind.
 
+**An agent runs the SonarQube analysis on its changes before it pushes them**, and fixes every new issue first.
+This applies to the first push of a pull request and to every later push that changes code. A push sent back by the
+SonarQube comment costs a full CI round, and so does the fix after it. The server accepts branch analyses (community
+branch plugin). From the repository checkout, with a personal token (*My Account → Security*) in `SONAR_TOKEN`:
+
+```bash
+./mvnw -ntp -Pquality verify
+./mvnw -ntp org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar \
+  -Dsonar.host.url=https://sonar.vidocq.dev -Dsonar.token="$SONAR_TOKEN" \
+  -Dsonar.projectKey=vidocq-<repository> -Dsonar.branch.name=<branch> -Dsonar.newCode.referenceBranch=main
+```
+
+Then read the new issues and the gate of that branch, and fix them before the push:
+`https://sonar.vidocq.dev/project/issues?id=vidocq-<repository>&branch=<branch>&resolved=false&inNewCodePeriod=true`.
+The gate also counts duplicated lines in new code (3 % at most): code repeated across sibling classes fails it
+even without an issue.
+
 ## Prerequisites (common to all projects)
 
 - **Java 25** (Temurin) + **Maven 3.9.16** — pinned via `.sdkmanrc` in each project: `cd <repo>/main && sdk env`.
