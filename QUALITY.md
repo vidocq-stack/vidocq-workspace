@@ -209,9 +209,11 @@ None of them sends a request to Maven Central.
 - SonarQube imports the reports through `sonar.sarifReportPaths`: **every SARIF result becomes a vulnerability**.
 - A scan that cannot be downloaded or fails is reported and skipped; it never stops the analysis.
 
-### Error Prone (Chappe, Foy)
+### Error Prone (Chappe, Foy; the profile lives in `vidocq-parent`)
 
-- The root `pom.xml` has an `errorprone` profile: `maven-compiler-plugin` with `-XDcompilePolicy=simple`,
+- The `errorprone` profile is declared in `vidocq-parent` (`errorprone.version` 2.50.0 in its properties). Until a
+  repository inherits a parent release that carries it, Chappe and Foy keep their own copy in the root `pom.xml`.
+  The profile is: `maven-compiler-plugin` with `-XDcompilePolicy=simple`,
   `--should-stop=ifError=FLOW` and
   `-Xplugin:ErrorProne -XepAllErrorsAsWarnings -XepExcludedPaths:.*(generated|generated-sources)/.* -XepDisableWarningsInGeneratedCode`,
   `error_prone_core` 2.50.0 on the annotation processor path. Every finding is a warning: none breaks the build.
@@ -223,6 +225,17 @@ None of them sends a request to Maven Central.
   not through SARIF, which would make them vulnerabilities. Rule keys read `external_error-prone:<Check>`.
 - A module that sets its own `annotationProcessorPaths` would drop Error Prone's: the profile declares its
   path with `combine.children="append"` (Foy's `foy-cdi-vauban` keeps Vauban's processor that way).
+- **Turning it on in a repository** (once it inherits a `vidocq-parent` with the profile): copy
+  `.mvn/jvm.config` from Chappe (the `--add-exports` / `--add-opens` lines above; without them javac fails when
+  Error Prone starts), add `errorprone` to `maven-args` and `analysis-args` of `.forgejo/workflows/sonar.yml`
+  (`-Pquality,errorprone`), and add a row for the repository in the tools table. No `pom.xml` change, and no
+  dependency: Error Prone only runs inside `javac`, never in what ships.
+- **Removing Chappe's and Foy's copy**: once their `<parent>` points at a `vidocq-parent` release (or a
+  snapshot the CI resolves) that has the profile, delete the `errorprone` `<profile>` and the
+  `errorprone.version` property from their root `pom.xml`. Check with
+  `./mvnw -Perrorprone help:effective-pom | grep -c error_prone_core`: it must print 1 per module, and the
+  warning count of a `-Perrorprone compile` must not change. Do not do it earlier: a consumer built against an
+  older parent would lose the profile, and the `sonar.yml` of Chappe would fail on an unknown profile.
 
 ### Infer's RacerD (Chappe, Foy)
 
