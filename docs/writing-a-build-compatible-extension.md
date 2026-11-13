@@ -84,6 +84,10 @@ The same extension runs on Weld and Open Liberty, at deployment. Two things met 
   and runs it at `AfterDeploymentValidation`.
 - Keep `io.vidocq.vauban.api` optional (`requires static`) and tolerate its absence where the extension asks
   `ExtensionPhase`, as Ravel's `runsAtBuildTime()` does.
+- The exception of a start check does not reach the caller the same way everywhere: Vauban stops the start with the
+  observer's `DeploymentException` itself, Weld with its own whose cause it is. A test that must hold on several
+  containers reads the messages of the whole chain, not `getCause()` (Ravel's
+  `VaubanContainerIntegrationTest.messagesOf`; asking for the cause broke Vidocq/ravel#51 against Vidocq/vauban#290).
 
 ## Tests
 
