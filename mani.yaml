@@ -153,6 +153,12 @@ projects:
     desc: Standard Tag Library implementation (Giambattista Bodoni)
     tags: [module, code]
 
+  kerckhoffs:
+    path: kerckhoffs/main
+    url: git@codefloe.com:Vidocq/kerckhoffs.git
+    desc: Security implementation (Auguste Kerckhoffs)
+    tags: [module, code]
+
   tassis:
     path: tassis/main
     url: git@codefloe.com:Vidocq/tassis.git
