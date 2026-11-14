@@ -5,8 +5,8 @@ Cassini's gives a scope to the `@Path` classes, Dirac's lists the classes that c
 write one so that it works at build and the application starts without running it. It is for whoever implements a
 new specification, human or agent.
 
-Reference pages: Vauban, `concepts.adoc`, "Extensions frozen at build" and "Writing an extension the build can
-freeze"; Vidocq, `internals.adoc`, "Build compatible extensions, frozen at build".
+Reference pages: Vauban, `concepts.adoc`, "Extensions frozen at build", "Writing an extension the build can
+freeze" and "Client proxies of synthetic beans"; Vidocq, `internals.adoc`, "Build compatible extensions, frozen at build".
 
 ## What happens to an extension
 
@@ -63,6 +63,78 @@ at start cannot live in its phases.
 6. **Ask `ExtensionPhase.isBuildTime()` only as a last resort.** An extension that asks is taken to have left work
    for the start, and runs again at each start. If one phase cannot avoid the start environment, put it in a class of
    its own, so that the rest stays frozen (Heisenberg's `InterceptorPriorityExtension`).
+7. **List in `@ClientProxies` every interface the extension registers as a synthetic bean of a normal scope.** See
+   the next section.
+
+## Synthetic beans of a normal scope: list their interfaces in `@ClientProxies`
+
+An extension that registers a synthetic bean (`SyntheticComponents.addBean`) whose type is an interface and whose
+scope is a normal scope (`@ApplicationScoped`, `@RequestScoped`, `@SessionScoped`, `@TransactionScoped`, any
+`@NormalScope`) lists that interface in `@io.vidocq.vauban.api.ClientProxies`. Noether is the case that found it: the
+`EntityManagerFactory` and the `EntityManager` of each persistence unit are synthetic beans that `noether-jpa-cdi`
+registers (Vauban BUG-20261113-19, Vidocq/vauban#298).
+
+### Why it is needed
+
+CDI injects a bean of a normal scope through a *client proxy*: the injection point holds the proxy, and each call
+asks the current context for the contextual instance (the `EntityManager` of the current transaction, for
+instance). Vauban generates that proxy at build, in the annotation processor, from the classes it compiles: the bean
+class, or the producer method of an interface, for which it writes a class that `implements` the interface.
+
+A synthetic bean has no class to start from. It is a descriptor the extension registers, and its type usually comes
+from another jar (`jakarta.persistence.EntityManager`). Nothing in the build turns it into a proxy:
+
+- the freeze records the descriptor, not a proxy class;
+- a deployment that runs its extensions at start (the tests, an IDE build, a TCK) has no build step at all.
+
+So, at every start, the container fell back to a `java.lang.reflect.Proxy`:
+
+- every call to the bean goes through `Method.invoke`, reflection on the hottest path of a persistence unit;
+- the proxy class is built during the boot, which slows the start, and cannot be prepared ahead of time (GraalVM
+  native image, Leyden CDS);
+- it is the dynamic proxy that "Maximum static code generation" in `AGENTS.md` rules out;
+- the start prints the framed `VAUBAN — RUNTIME CODE GENERATION FALLBACK` warning, in every application that uses
+  the brick, at every start. A warning that everyone learns to ignore hides the next real fallback. Until the fix, it
+  even advised adding `vauban-processor`, which the application already had.
+
+`@ClientProxies` moves that generation to the build of the module that carries the annotation: the processor writes
+the proxy class there, once, the jar ships it, and every application gets it already compiled.
+
+### How
+
+```java
+@ClientProxies({EntityManager.class, EntityManagerFactory.class})
+public final class NoetherPersistenceExtension implements VidocqExtension { … }
+```
+
+- **Where**: on any class of a module that is compiled with `vauban-processor` and declares its provider,
+  `provides io.vidocq.vauban.api.VaubanComponentProvider with <package>._VaubanComponents;`. The processor writes
+  that provider even when the module has no bean of its own.
+- **Which module**: a brick that depends on Vauban (a `*-cdi-vauban` adapter) puts it on its extension. A brick that
+  stays container-neutral, like `noether-jpa-cdi`, cannot: it would depend on Vauban. Its Vidocq runtime extension
+  lists the interfaces instead, as `NoetherPersistenceExtension` does.
+- **What it costs**: the annotation has `CLASS` retention. The module needs `io.vidocq.vauban.api` to compile, and
+  nothing at run time.
+- **What gets generated**: in the package of the annotated class, a class that `implements` each listed interface
+  and forwards every method, abstract or `default`, to the contextual instance. The provider creates it.
+- **Who it serves**: the container looks the proxy up by its interface, so one entry serves every synthetic bean of
+  that interface, whichever extension registers it.
+- **What to list**:
+  - public interfaces only. The proxy implements the interface from the annotated class's package, so the compilation
+    fails on a non-public interface, or on one nested in a non-public type.
+  - no class. The compilation refuses one: a synthetic bean of a class type gets the client proxy of that class.
+  - no `@Dependent` or `@Singleton` bean. They have no client proxy.
+- **Which Vauban**: one that has the annotation, a 0.4.0 SNAPSHOT from Vidocq/vauban#298 on.
+
+### How to check it
+
+- The compilation of the module prints one line per entry:
+  `[Vauban] Generated build-time interface proxy … for <interface> (key <interface>_ClientProxy)`.
+- The start of an application that uses the brick prints no `RUNTIME CODE GENERATION FALLBACK`. When an entry is
+  missing, the warning lists `interface client proxy (java.lang.reflect.Proxy) of a synthetic bean <interface>` and
+  says to list it in `@ClientProxies`.
+- An integration test asserts it: Vidocq's `UnitsPerModuleIT` (`vidocq-runtime-it-noether-units-per-module`) checks
+  that the start log has no such line. It was red before `NoetherPersistenceExtension` listed the two interfaces.
 
 ## On the Vidocq side
 
@@ -107,6 +179,8 @@ The same extension runs on Weld and Open Liberty, at deployment. Two things met 
 - [ ] No `removeAnnotation`.
 - [ ] A `-codegen` bundle brings the extension to the processor path; `checkpom` agrees.
 - [ ] Beans added by the Vidocq extension use `addHostBean`.
+- [ ] Every interface registered as a synthetic bean of a normal scope is listed in `@ClientProxies`, on the
+      `*-cdi-vauban` extension or the Vidocq extension, and the start prints no `RUNTIME CODE GENERATION FALLBACK`.
 - [ ] The build prints `Vauban: froze N build compatible extension(s)` with no extension left for the start, and the
       startup report says so.
 - [ ] Weld and Open Liberty modules green, TCK count unchanged.
