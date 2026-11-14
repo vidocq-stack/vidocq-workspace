@@ -29,7 +29,7 @@ interpretation while a front proxy may pick another.
 |---|---|---|
 | High | 1 | F-01 request smuggling (framing ambiguity) |
 | Medium | 3 | F-02 Java deserialization in Noether, F-03 trusted `X-Forwarded-*`, F-04 CI actions pinned to `@main` |
-| Low | 8 | F-05 … F-12 (JWKS over http, WebSocket Origin, session cap, symlink escape, EL reflection default, log injection, JSON-Pointer recursion, connection cap) |
+| Low | 8 | F-05 … F-12 (JWKS over http, WebSocket Origin — fixed, session cap, symlink escape, EL reflection default, log injection, JSON-Pointer recursion, connection cap) |
 | Info | 2 | F-13 plaintext default listener, F-14 fast password hash (known gap #277) |
 
 ## Attack surface map
@@ -185,6 +185,17 @@ offers no helper.
 
 **Recommendation.** Add an optional `allowedOrigins(...)` on the WebSocket route builder and
 reject mismatches with 403; document the CSWSH duty in the chappe reference page.
+
+**Status: FIXED (2026-11-14).** WebSocket handshakes are same-origin by default, everywhere.
+- Chappe (Vidocq/chappe#83): `Router.Builder.webSocketOrigins(WebSocketOrigins)`. A refused `Origin`
+  gets 403 and a WARNING, and a request without `Origin` (a non-browser client) is accepted.
+  `WebSocketOrigins.parse` reads `*` or a comma-separated list. A `Sec-WebSocket-Key` that does not
+  decode to 16 bytes is refused (CHAPPE-057).
+- Foy (Vidocq/foy#100): Jakarta WebSocket endpoints apply the same policy, opened by the context init
+  parameter `io.vidocq.foy.websocket.allowed-origins`.
+- Vidocq (Vidocq/vidocq#567): one key, `vidocq.websocket.allowed-origins`, for native Chappe mounts and
+  Jakarta WebSocket endpoints. A malformed entry stops the start. This is a behaviour change for
+  native mounts, which used to accept every origin; the migration page says what to set.
 
 ### F-07 — LOW — No cap on concurrent connections / active sessions (DoS hardening)
 
