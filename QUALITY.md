@@ -146,7 +146,8 @@ jobs:
           # infer: 'true'
 ```
 
-The job image of the shared runners is `node:24.22.1-trixie` (glibc 2.41; Infer needs 2.38 or later).
+The job image of the shared runners is `node:24.22.1-trixie` (glibc 2.41; Infer needs 2.38 or later). On
+2026-11-16 that held for three runners out of five: see [Pitfalls met so far](#pitfalls-met-so-far).
 
 ## The tools
 
@@ -207,7 +208,11 @@ None of them sends a request to Maven Central.
   gives OpenGrep's rules stable ids, and drops the findings of modules SonarQube does not analyse (`sonar.skip`,
   out-of-reactor TCK runners).
 - SonarQube imports the reports through `sonar.sarifReportPaths`: **every SARIF result becomes a vulnerability**.
-- A scan that cannot be downloaded or fails is reported and skipped; it never stops the analysis.
+- Each tool is a pinned release checked by SHA-256, the asset of the runner's architecture: amd64 or arm64.
+- A scan that cannot be downloaded or fails is reported and skipped; it never stops the analysis. **The pull-request
+  comment names it**: "⚠️ Security scans without a result: ...". The gate then says nothing about what that scan
+  looks for, and the analysis is not recorded for reuse. Re-run the sonar job: a re-run always analyses again, where
+  closing and reopening the pull request reuses the recorded analysis of the same code.
 
 ### Error Prone (Chappe, Foy; the profile lives in `vidocq-parent`)
 
@@ -244,7 +249,10 @@ None of them sends a request to Maven Central.
   under Infer module by module (main sources, the module's class path from `maven-dependency-plugin:build-classpath`),
   then one `--racerd-only` analysis over every capture. A module whose capture fails is reported and skipped.
 - Its findings become reliability issues of high severity, through the generic format.
-- Infer's Linux binary needs glibc 2.38 or later: hence the trixie job image.
+- Infer's Linux binary needs glibc 2.38 or later: hence the trixie job image. It exists for x86_64 only.
+- Where Infer cannot start (an older job image, an arm64 runner), it gives no result and the pull-request comment
+  says "⚠️ Infer without a result": the gate then says nothing about data races. Re-run the sonar job; which runners
+  can run Infer is [Vidocq/ci#121](https://codefloe.com/Vidocq/ci/issues/121).
 
 ### japicmp: API compatibility (Chappe, Foy)
 
@@ -318,6 +326,8 @@ follow one by one (#269), each findings backlog going to the clean-up campaign (
 
 - **On a pull request**: the SonarQube comment (gate, new issues, coverage of new code, link to the analysis),
   and the japicmp comment where japicmp runs. In report mode the gate does not block: read it before merging.
+  A line that starts with ⚠️ names a security scan, or Infer, that gave no result in that run: a green gate then
+  proves less than it says.
 - **On `main`**: `https://sonar.vidocq.dev/dashboard?id=vidocq-<repository>`. An analysis the server could not
   take leaves a green job behind: check that the last analysis is the head of `main`
   (*Project Activity*), and run the workflow by hand on `main` otherwise.
@@ -353,6 +363,14 @@ follow one by one (#269), each findings backlog going to the clean-up campaign (
   Trivy's dependency scan got a runner's address rate-limited by Maven Central (HTTP 429, blocked for 30 minutes).
 - **Report mode hides a failed analysis**: the job stays green and no comment appears. Look for the comment, and on
   `main` for an analysis of the head commit.
+- **A green comment says nothing of a tool that did not run.** Until 2026-11-16 the security scans were amd64
+  binaries: on the arm64 runner none ran, the comment said "passed", and a pull request brought two OpenGrep findings
+  to `main` of Vidocq (Vidocq/ci#118). Infer does not start on a job image with glibc 2.36, nor on arm64
+  (Vidocq/ci#120). The comment now names what gave no result. On `main` there is no comment: the warning is in the
+  log of the sonar job, and a manual run of the workflow analyses `main` again.
+- **The runners are not all alike**: on 2026-11-16 two of the five ran their jobs in `node:20-bookworm`, without
+  Docker for the tests, and one is arm64 (Vidocq/ci#121). What a green job proves depends on the runner that took it:
+  the first lines of its log name the runner and the image.
 - **A plain surefire `<argLine>` drops the JaCoCo agent**: write `@{argLine}` first.
 - **Two checkers can disagree.** Error Prone's `BooleanLiteral` suggests `assertEquals(true, x)`, which SonarJava's
   `java:S2701` forbids: write `assertTrue(x)`.
