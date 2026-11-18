@@ -84,6 +84,40 @@ their tests, the intermediate upstreams that have the branch too (a mini-chain),
 the consumer. An intermediate upstream without the branch is never rebuilt: it comes from
 `central-snapshots` as published. The merges follow the dependency order.
 
+## Two producers on one branch
+
+A companion branch can deadlock when it spans **two repositories that both feed the same
+consumer, and neither sits between the other and that consumer**. Vauban's bug stack of
+2026-11-18 (vauban#337) hit it:
+
+- Kerckhoffs and Cassini both depend on Vauban, and Vidocq depends on both. All three had the
+  branch `fix/vauban-bug-stack`.
+- cassini#151's `downstream` job built Vidocq on the branch. Kerckhoffs is not between Cassini
+  and Vidocq, so that job took Kerckhoffs from its published `main`, which lacked a fix the Vidocq
+  branch relied on: a test returned 401 instead of 200.
+- kerckhoffs#34's `downstream` job built the same Vidocq branch. Cassini is not between Kerckhoffs
+  and Vidocq, so it took Cassini from its published `main`, which lacked a class the Vidocq branch
+  used: the job did not compile.
+- Neither pull request could turn green first, so neither could merge.
+
+Before you push a companion branch that spans more than one producer of a consumer, list what
+each consumer commit needs from each upstream, then:
+
+- **Put the consumer commits that need only one producer on a second branch name** shared with
+  that producer, and merge that branch first. The deadlock above was broken with
+  `fix/vauban-336-followup` (kerckhoffs#35 and vidocq#658), merged before the rest.
+- **Prove the split offline** before pushing it: build the consumer on a private Maven repository
+  with each upstream at `origin/main`, except the one producer on the branch. That is how the
+  `downstream` job resolves them.
+- **Keep an API change additive across the window.** Adding a component to a public record keeps
+  binary compatibility, but every record pattern that deconstructs it stops compiling: the
+  consumer's `main` breaks the moment the producer merges. Add a method or a new type instead, or
+  ship the consumer's fix on the branch merged first.
+
+Each merge in the chain then waits for the previous one's snapshot (step 5 above), and each
+`main` in between may not build against the new snapshots until its own companion merges. Merge
+the chain without starting other work on those repositories.
+
 ## What a companion branch does not cover
 
 - **New dependencies.** The consumers come from the dependency graph of each repository's
