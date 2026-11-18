@@ -52,8 +52,10 @@ at start cannot live in its phases.
 
    Give the observer an early priority, so that no application observer works for an application that will not
    start.
-3. **Add annotations, never remove them.** `ClassConfig.addAnnotation` is frozen; `removeAnnotation` is not, and one
-   removal sends the whole deployment back to running its extensions at start.
+3. **Add annotations, never remove them.** `ClassConfig.addAnnotation` is frozen; `removeAnnotation` and
+   `removeAllAnnotations` are not. The extension that calls one runs again at each start, alone, and the others stay
+   frozen (Vidocq/vauban#343); the build prints one line naming it and the class. A synthetic component given a
+   parameter the metadata cannot express does the same. To replace the effect of an annotation, add the one that wins.
 4. **Carry data in parameters, not in fields.** `withParam` takes primitives, `String`, `Class`, enums, annotations,
    `ClassInfo`, `AnnotationInfo`, `InvokerInfo` and their arrays; they reach the creator or the observer at start. A
    field of the extension does not: no extension instance exists at start.
