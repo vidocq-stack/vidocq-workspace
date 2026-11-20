@@ -106,6 +106,12 @@ projects:
     desc: A Vaadin Flow application on the Vidocq runtime (end-to-end replay target)
     tags: [vcu, code]
 
+  ide_plugins:
+    path: ide_plugins/main
+    url: git@codefloe.com:VidocqCodeUniverse_VCU/ide_plugins.git
+    desc: IDE plugins (IntelliJ IDEA first; VS Code, Eclipse and NetBeans planned)
+    tags: [vcu, code]
+
 specs:
   parallel:
     output: table
