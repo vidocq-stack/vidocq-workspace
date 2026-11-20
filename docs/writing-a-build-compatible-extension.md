@@ -142,7 +142,7 @@ public final class NoetherPersistenceExtension implements VidocqExtension { … 
 
 - The Vidocq extension has a `-codegen` bundle that brings the brick's extension to the processor path
   (`vidocq-runtime-<x>-extension-codegen`: the brick's `*-cdi` jar, the CDI API, what those jars leave `provided`),
-  declared in the extension descriptor (`codegen = ...`), the BOM, the root `dependencyManagement` and the regenerated
+  declared in the extension descriptor (`codegen = ...`), the BOM, the `dependencyManagement` of `vidocq-runtime/pom.xml` in the monorepo and the regenerated
   catalog. Without it the compilation does not see the extension, and nothing it adds reaches the code generated
   while compiling (Vidocq/vidocq#546).
 - A bean the Vidocq extension adds in `beforeStart` goes through `VaubanContainerBuilder.addHostBean(type, factory)`:

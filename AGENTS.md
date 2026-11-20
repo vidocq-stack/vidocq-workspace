@@ -132,7 +132,7 @@ Cross-cutting rules that apply to **all** projects, unless an explicitly documen
 
 ## Code quality
 
-SonarQube analyses the monorepo and every Java repository outside it; the tools plugged into the analysis, their
+SonarQube analyses the monorepo and the Java repositories outside it (`erasmus` is not wired yet); the tools plugged into the analysis, their
 settings and the pitfalls met so far are in `QUALITY.md`. The monorepo is one SonarQube project, key
 `the-vidocq-project`: `pr-validate` analyses the modules holding a changed file, from its own build, in blocking
 mode (a red gate fails the pull request), and the nightly build analyses `main`. A repository outside the monorepo

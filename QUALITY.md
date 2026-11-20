@@ -8,6 +8,23 @@ State on **2026-10-22**. The plan behind the tools is [Vidocq/vidocq#269](https:
 the SonarQube rollout [#284](https://codefloe.com/Vidocq/vidocq/issues/284), and the clean-up of the
 findings [#285](https://codefloe.com/Vidocq/vidocq/issues/285).
 
+## Since the monorepo (2026-11-20)
+
+The components, their parent and the runtime now live in one repository, `Vidocq/vidocq`. What changed for the
+analysis:
+
+- **One SonarQube project**, key `the-vidocq-project`, instead of one per repository.
+- **No `sonar.yml`.** The `producer` job of `.forgejo/workflows/pr.yml` runs the analysis after its own build
+  (gitflow-incremental-builder, `-Pquality`), over the modules holding a changed file and the aggregators above
+  them, in **blocking** mode: a red gate fails the pull request. A pull request that changes documentation only is
+  not analysed. `.forgejo/workflows/nightly.yml` analyses `main` once a night from the full build, blocking too.
+- Error Prone and Infer are not switched on in those workflows, and the monorepo has no ZAP workflow at its root
+  yet.
+
+The rest of this page describes the state before the monorepo, one repository at a time. It still holds for the
+repositories outside it that are analysed (`tassis`, `verne`; `erasmus` has no `sonar.yml`): one project each, key
+`vidocq-<repository>`, their own `sonar.yml`, report mode.
+
 ## At a glance
 
 Every change goes through the same checks, plus a nightly scan where it is in place:
@@ -35,7 +52,7 @@ flowchart TB
 | URL | <https://sonar.vidocq.dev> |
 | Edition | SonarQube Community Build 26.5 with the [community branch plugin](https://github.com/mc1arke/sonarqube-community-branch-plugin): `main` and pull requests are analysed separately |
 | Sign-in | Codefloe account; members of the Vidocq organisation's Owners and devs teams. Owners administer the server |
-| Projects | one per repository, key `vidocq-<repository>`, created by its first analysis |
+| Projects | `the-vidocq-project` for the monorepo; one per repository outside it, key `vidocq-<repository>`, created by its first analysis |
 | Quality profile | built-in **Sonar way**, for every language (Java: SonarJava 8.29) |
 | Quality gate | built-in **Sonar way**, on new code: no new issue, coverage of new code ≥ 80 %, duplicated lines in new code ≤ 3 %, every new security hotspot reviewed |
 | New code | since the previous version (instance default): every analysis of a `-SNAPSHOT` carries the same version, so new code is everything changed since the version last changed |
@@ -117,7 +134,8 @@ A pull request from a fork receives no secrets: the analysis is skipped.
 
 ### The workflow of a repository
 
-`.forgejo/workflows/sonar.yml`, the same in every repository (Chappe adds the two commented inputs):
+`.forgejo/workflows/sonar.yml`, the same in every repository outside the monorepo (Chappe added the two commented
+inputs before it moved; the monorepo analyses inside `pr.yml` and `nightly.yml`, see above):
 
 ```yaml
 name: sonar
@@ -328,7 +346,8 @@ follow one by one (#269), each findings backlog going to the clean-up campaign (
   and the japicmp comment where japicmp runs. In report mode the gate does not block: read it before merging.
   A line that starts with ⚠️ names a security scan, or Infer, that gave no result in that run: a green gate then
   proves less than it says.
-- **On `main`**: `https://sonar.vidocq.dev/dashboard?id=vidocq-<repository>`. An analysis the server could not
+- **On `main`**: `https://sonar.vidocq.dev/dashboard?id=the-vidocq-project` for the monorepo,
+  `https://sonar.vidocq.dev/dashboard?id=vidocq-<repository>` outside it. An analysis the server could not
   take leaves a green job behind: check that the last analysis is the head of `main`
   (*Project Activity*), and run the workflow by hand on `main` otherwise.
 - **Nightly ZAP**: Slack on failure; the log of the run lists every alert.
