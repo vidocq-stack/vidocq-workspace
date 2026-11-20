@@ -1,15 +1,10 @@
 projects:
+  # --- Vidocq organisation -------------------------------------------------
   vidocq:
     path: vidocq/main
     url: git@codefloe.com:Vidocq/vidocq.git
-    desc: Vidocq orchestrator (main runtime)
-    tags: [module, runtime, code]
-
-  vidocq-parent:
-    path: vidocq-parent/main
-    url: git@codefloe.com:Vidocq/vidocq-parent.git
-    desc: Parent POM for all Vidocq modules
-    tags: [parent, code]
+    desc: The Vidocq monorepo (parent POM, components, preview, incubator, runtime)
+    tags: [vidocq, code]
 
   vidocq-docs:
     path: vidocq-docs/main
@@ -19,157 +14,97 @@ projects:
     # path (../../<repo>/main), so every checkout must sit exactly one level
     # under vidocq-docs/ — worktree dirs are flattened (fix/foo -> fix-foo).
     # See docs/working-with-mani-and-worktrees.md, section "Exemptions".
-    tags: [docs, flat-worktree]
+    tags: [vidocq, docs, flat-worktree]
 
   pages:
     path: pages/main
     url: git@codefloe.com:Vidocq/pages.git
     desc: vidocq.dev site (Roq, deployed to Cloudflare Pages)
-    tags: [docs, pages]
-
-  ci:
-    path: ci/main
-    url: git@codefloe.com:Vidocq/ci.git
-    desc: CI configuration and pipelines
-    tags: [ci]
+    tags: [vidocq, docs, pages]
 
   governance:
     path: governance/main
     url: git@codefloe.com:Vidocq/governance.git
-    desc: Governance configuration and processes
-    tags: [governance]
+    desc: Contribution rules, CLA, contributor GPG keys (read by governance-checks)
+    tags: [vidocq, governance]
 
-  vauban:
-    path: vauban/main
-    url: git@codefloe.com:Vidocq/vauban.git
-    desc: CDI implementation
-    tags: [module, code]
+  vidocq-benchmarks:
+    path: vidocq-benchmarks/main
+    url: git@codefloe.com:Vidocq/vidocq-benchmarks.git
+    desc: Benchmark applications and load scripts (Vidocq vs other runtimes)
+    tags: [vidocq, code, bench]
 
-  cassini:
-    path: cassini/main
-    url: git@codefloe.com:Vidocq/cassini.git
-    desc: REST implementation
-    tags: [module, code]
+  vidocq-tutorial:
+    path: vidocq-tutorial/main
+    url: git@codefloe.com:Vidocq/vidocq-tutorial.git
+    desc: Step-by-step Vidocq tutorial (private for now)
+    tags: [vidocq, docs]
 
-  champollion:
-    path: champollion/main
-    url: git@codefloe.com:Vidocq/champollion.git
-    desc: JSON implementation
-    tags: [module, code]
+  # --- CI ------------------------------------------------------------------
+  ci:
+    path: ci/main
+    url: git@codefloe.com:Vidocq/ci.git
+    desc: Shared composite actions and reusable workflows (setup-maven, sonar-analysis, merge-bot, ...)
+    tags: [ci]
 
-  chappe:
-    path: chappe/main
-    url: git@codefloe.com:Vidocq/chappe.git
-    desc: HTTP implementation
-    tags: [module, code]
+  # dep-graph and GestionProjet serve the multi-repo CI of erasmus, tassis and
+  # verne only; archive them once those three have moved (incubator/ or VCU).
+  dep-graph:
+    path: dep-graph/main
+    url: git@codefloe.com:Vidocq/dep-graph.git
+    desc: Cross-repository dependency graph (erasmus, tassis, verne)
+    tags: [ci, legacy]
 
-  foy:
-    path: foy/main
-    url: git@codefloe.com:Vidocq/foy.git
-    desc: Servlet implementation
-    tags: [module, code]
+  GestionProjet:
+    path: GestionProjet/main
+    url: git@codefloe.com:Vidocq/GestionProjet.git
+    desc: Multi-repo workflow templates (erasmus, tassis, verne)
+    tags: [ci, legacy]
 
-  mansart:
-    path: mansart/main
-    url: git@codefloe.com:Vidocq/mansart.git
-    desc: Data implementation
-    tags: [module, code]
-
-  noether:
-    path: noether/main
-    url: git@codefloe.com:Vidocq/noether.git
-    desc: Jakarta Persistence implementation (Emmy Noether)
-    tags: [module, code]
-
-  ravel:
-    path: ravel/main
-    url: git@codefloe.com:Vidocq/ravel.git
-    desc: Config implementation
-    tags: [module, code]
-
-  knock:
-    path: knock/main
-    url: git@codefloe.com:Vidocq/knock.git
-    desc: Health implementation
-    tags: [module, code]
-
-  dirac:
-    path: dirac/main
-    url: git@codefloe.com:Vidocq/dirac.git
-    desc: Metrics implementation
-    tags: [module, code]
-
-  heisenberg:
-    path: heisenberg/main
-    url: git@codefloe.com:Vidocq/heisenberg.git
-    desc: Fault Tolerance implementation
-    tags: [module, code]
-
-  cervantes:
-    path: cervantes/main
-    url: git@codefloe.com:Vidocq/cervantes.git
-    desc: JWT implementation
-    tags: [module, code]
-
-  cyrano:
-    path: cyrano/main
-    url: git@codefloe.com:Vidocq/cyrano.git
-    desc: REST Client implementation
-    tags: [module, code]
-
-  humboldt:
-    path: humboldt/main
-    url: git@codefloe.com:Vidocq/humboldt.git
-    desc: Telemetry implementation
-    tags: [module, code]
-
-  grimm:
-    path: grimm/main
-    url: git@codefloe.com:Vidocq/grimm.git
-    desc: OpenAPI implementation
-    tags: [module, code]
-
+  # --- Repositories not in the monorepo yet ----------------------------------
+  # erasmus and tassis go into the monorepo's incubator/, verne goes to VCU.
   erasmus:
     path: erasmus/main
     url: git@codefloe.com:Vidocq/erasmus.git
-    desc: Bean Validation implementation
-    tags: [module, code]
-
-  peano:
-    path: peano/main
-    url: git@codefloe.com:Vidocq/peano.git
-    desc: Expression Language implementation
-    tags: [module, code]
-
-  ibarra:
-    path: ibarra/main
-    url: git@codefloe.com:Vidocq/ibarra.git
-    desc: Pages implementation
-    tags: [module, code]
-
-  bodoni:
-    path: bodoni/main
-    url: git@codefloe.com:Vidocq/bodoni.git
-    desc: Standard Tag Library implementation (Giambattista Bodoni)
-    tags: [module, code]
-
-  kerckhoffs:
-    path: kerckhoffs/main
-    url: git@codefloe.com:Vidocq/kerckhoffs.git
-    desc: Security implementation (Auguste Kerckhoffs)
-    tags: [module, code]
+    desc: Bean Validation implementation (to incubator/)
+    tags: [code, legacy]
 
   tassis:
     path: tassis/main
     url: git@codefloe.com:Vidocq/tassis.git
-    desc: Messaging implementation
-    tags: [module, code]
+    desc: Messaging implementation (to incubator/)
+    tags: [code, legacy]
 
   verne:
     path: verne/main
     url: git@codefloe.com:Vidocq/verne.git
-    desc: Template engine
-    tags: [module, code]
+    desc: Template engine (to VCU)
+    tags: [code, legacy]
+
+  # --- VidocqCodeUniverse (VCU) ----------------------------------------------
+  vcu-template:
+    path: vcu-template/main
+    url: git@codefloe.com:VidocqCodeUniverse_VCU/template.git
+    desc: Template of a VCU extension
+    tags: [vcu]
+
+  vidocq_vcu_extension_lc4jcdi:
+    path: vidocq_vcu_extension_lc4jcdi/main
+    url: git@codefloe.com:VidocqCodeUniverse_VCU/vidocq_vcu_extension_lc4jcdi.git
+    desc: langchain4j-cdi MCP extension
+    tags: [vcu, code]
+
+  vidocq_vcu_extension_vaadin:
+    path: vidocq_vcu_extension_vaadin/main
+    url: git@codefloe.com:VidocqCodeUniverse_VCU/vidocq_vcu_extension_vaadin.git
+    desc: Vaadin Flow extension and its dev console panel
+    tags: [vcu, code]
+
+  vaadin-on-vidocq:
+    path: vaadin-on-vidocq/main
+    url: git@codefloe.com:VidocqCodeUniverse_VCU/vaadin-on-vidocq.git
+    desc: A Vaadin Flow application on the Vidocq runtime (end-to-end replay target)
+    tags: [vcu, code]
 
 specs:
   parallel:

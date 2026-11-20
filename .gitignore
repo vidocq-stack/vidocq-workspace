@@ -1,12 +1,11 @@
 # ===========================================================================
 #  Vidocq workspace — .gitignore
 #
-#  This repository is meant to be checked out AS the root of your multi-repo
-#  Vidocq working directory. The individual project repositories (vauban,
-#  vidocq, cassini, champollion, chappe, foy, mansart, ravel, knock, dirac,
-#  heisenberg, grimm, cyrano, cervantes, humboldt, …) are cloned INTO this
-#  directory by the checkout tooling and each keeps its OWN independent git
-#  repo. They must never be tracked here.
+#  This repository is meant to be checked out AS the root of your Vidocq
+#  working directory. The repositories listed in mani.yaml (the vidocq
+#  monorepo, vidocq-docs, pages, ci, the VCU extensions, …) are cloned INTO
+#  this directory by mani and each keeps its OWN independent git repo. They
+#  must never be tracked here.
 # ===========================================================================
 
 # Ignore every top-level directory (the nested project clones)…
@@ -41,32 +40,20 @@ tokens*.env
 !/prompts/
 
 # mani #
-verne/main
-tassis/main
-ibarra/main
-bodoni/main
-kerckhoffs/main
-peano/main
-erasmus/main
-grimm/main
-humboldt/main
-cyrano/main
-cervantes/main
-heisenberg/main
-dirac/main
-knock/main
-ravel/main
-noether/main
-mansart/main
-foy/main
-chappe/main
-champollion/main
-cassini/main
-vauban/main
-governance/main
+GestionProjet/main
 ci/main
+dep-graph/main
+erasmus/main
+governance/main
 pages/main
+tassis/main
+vaadin-on-vidocq/main
+vcu-template/main
+verne/main
+vidocq-benchmarks/main
 vidocq-docs/main
-vidocq-parent/main
+vidocq-tutorial/main
 vidocq/main
+vidocq_vcu_extension_lc4jcdi/main
+vidocq_vcu_extension_vaadin/main
 # mani #
