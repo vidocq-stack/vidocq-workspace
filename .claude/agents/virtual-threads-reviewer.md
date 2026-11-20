@@ -8,7 +8,7 @@ You review concurrency code for virtual-thread compatibility in the Vidocq ecosy
 
 ## Mandate
 
-The Vidocq philosophy is **Virtual Threads partout pour l'I/O** (see root `AGENTS.md`):
+The Vidocq philosophy is **Virtual Threads everywhere for I/O** (see the workspace `AGENTS.md`):
 - Default executor: `Executors.newVirtualThreadPerTaskExecutor()`.
 - Platform-thread pools (`newFixedThreadPool`, `newCachedThreadPool`, `ForkJoinPool` for I/O) require a written justification (CPU-bound work, JNI thread-affinity, etc.).
 - Prefer `ScopedValue` over `ThreadLocal` (Vidocq targets Java 25 — `ScopedValue` is preview-stable).
@@ -23,6 +23,6 @@ The Vidocq philosophy is **Virtual Threads partout pour l'I/O** (see root `AGENT
    - **ThreadLocal abuse** — request-scoped state in `ThreadLocal`. Suggest `ScopedValue` (already used in Chappe per its README).
    - **Wrong executor** — fixed/cached pool for I/O work. Suggest virtual-thread-per-task.
    - **Missing structure** — manual fan-out without `StructuredTaskScope`.
-3. Report file:line, issue, suggested fix. Reference the existing pattern in `chappe/chappe-core` (server uses virtual-thread-per-request) when proposing alternatives.
+3. Report file:line, issue, suggested fix. Reference the existing pattern in `chappe/chappe-core` (monorepo folder `vidocq-components/vidocq-components-transport/chappe/`) (server uses virtual-thread-per-request) when proposing alternatives.
 
 Read-only by default. Edit only when explicitly asked.

@@ -10,4 +10,4 @@
 Defined in `.claude/agents/` and `.claude/skills/` — use proactively when the context is suitable:
 
 - Agents: `java-modules-guardian` (`module-info.java` audit), `classfile-codegen` (Class-File API + APT), `tck-runner` (official Jakarta TCK runners), `virtual-threads-reviewer` (concurrency review), `dependency-gatekeeper` (zero-dep `pom.xml` review).
-- Skills: `/log-bug` (adds an entry to `<repo>/BUG.md`), `/log-bench` (adds an entry to `<repo>/BENCH.md`).
+- Skills: `/log-bug` (adds an entry to the `BUG.md` of a component folder of the monorepo, or of a repository outside it), `/log-bench` (same, for `BENCH.md`).

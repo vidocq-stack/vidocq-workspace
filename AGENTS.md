@@ -4,30 +4,82 @@ Single source of agent instructions for the Vidocq ecosystem (Codex, Claude Code
 other coding agent). `CLAUDE.md` only imports this file (`@AGENTS.md`) and adds the
 Claude-specific tooling. Edit the rules **here**, never in `CLAUDE.md`.
 
-Each project repo carries its own `AGENTS.md` with a short, self-contained "Ecosystem
-rules" summary that points back to this file: in the mani layout every project is its own
-git repository, so an agent started inside `<repo>/main/` never sees this file on its own.
+The monorepo's root `AGENTS.md`, each component's `AGENTS.md` and the `AGENTS.md` of every
+repository outside the monorepo carry a short summary that points back to this file, which
+prevails: an agent started inside `vidocq/main/` (or any other checkout) never sees this file
+on its own.
 
 ## Repository nature
 
-This directory is a **workspace** grouping the independent Maven projects of the Vidocq ecosystem — there is **no root POM**, **no root `mvnw`**, and **no unified reactor**. Each project has its own reactor, its own `.sdkmanrc`, its own `mvnw`, and its own `AGENTS.md` / `CLAUDE.md` to consult first when working inside it.
+This directory is a **workspace**, not a build: there is **no root POM** and **no root `mvnw`** here. mani
+(`mani.yaml`) clones the repositories of the ecosystem into it; each keeps its own git repository and is
+git-ignored here. All of them live on [Codefloe](https://codefloe.com/Vidocq).
 
-The ecosystem spans several groups of repositories (all under the `Vidocq` organisation on [Codefloe](https://codefloe.com/Vidocq)):
+**`Vidocq/vidocq`, the monorepo** (`vidocq/main/`), holds since 2026-11-20 every component, their shared parent
+and the runtime: one Maven reactor, one version (in the root POM), one CI. Their former repositories are deleted.
+`components.json` at its root lists each component with its PR title tag, its folder and its maturity level.
 
-- **Foundational bricks** (no dependencies between them): `chappe` (pure Java 25 HTTP/1.1 + HTTP/2 server — transport), `vauban` (CDI 4.1 Lite container, Java Modules native — DI), `champollion` (Jakarta JSON-P 2.1 + JSON-B 3.0).
-- **Jakarta EE layers** (compose the bricks): `foy` (Servlet 6.1 — transport via chappe, CDI via vauban), `cassini` (REST 4.0 / JAX-RS), `mansart` (Jakarta Data 1.0 — JDBC pool and transactions), `noether` (Jakarta Persistence 3.2; includes the non-published `noether-validation` test/TCK stopgap), `erasmus` (Bean Validation), `tassis` (Messaging 3.1), `kerckhoffs` (Security 4.0 — authentication mechanisms and identity stores; in design, see its `PLAN.md` §3 for the open Authentication/Authorization question).
-- **Jakarta EE web tier** (in design): `peano` (Jakarta Expression Language 6.0 — depends on nothing beyond the `jakarta.el` API), `ibarra` (Jakarta Pages 4.0 — build-time page compilation, runs on `foy` with `peano` as the default EL provider), `bodoni` (Jakarta Standard Tag Library 3.0 — portable tag handlers on the JSTL API alone; optional build-time inlining by `ibarra`).
-- **MicroProfile bricks:** `ravel` (Config 3.1), `knock` (Health 4.0), `dirac` (Metrics 5.1), `heisenberg` (Fault Tolerance 4.1), `cervantes` (JWT 2.1), `cyrano` (REST Client 4.0), `humboldt` (Telemetry 2.1), `grimm` (OpenAPI 4.1).
-- **Vidocq bricks** (no specification behind them, in design): `verne` (template engine).
-- **Runtime & support:** `vidocq` (the runtime — orchestrator, extension mechanism, packaging), `vidocq-parent` (shared parent POM), `vidocq-docs` (Antora docs site, English-only), `pages` (vidocq.dev site), `ci` (CI configuration & pipelines), `governance` (CLA, contributor GPG keys, processes), `dep-graph` (the cross-repository dependency graph the CI reads), `GestionProjet` (CI architecture, workflow templates, how to add a repository).
+| Folder of the monorepo | What it holds |
+|---|---|
+| `vidocq-parent/` | The parent POM of every module; repositories outside the monorepo use it too. |
+| `vidocq-components/vidocq-components-transport/` | `chappe` (pure Java 25 HTTP/1.1 + HTTP/2 server, transport). |
+| `vidocq-components/vidocq-components-jakartaee/vidocq-components-jakartaee-core/` | `vauban` (CDI 4.1 Lite container, Java Modules native), `champollion` (JSON-P 2.1 + JSON-B 3.0), `cassini` (REST 4.0). |
+| `vidocq-components/vidocq-components-jakartaee/vidocq-components-jakartaee-webprofile/` | `foy` (Servlet 6.1, transport via chappe, CDI via vauban), `peano` (Expression Language 6.0, on the `jakarta.el` API alone), `ibarra` (Pages 4.0, build-time page compilation, runs on `foy` with `peano`), `bodoni` (Standard Tag Library 3.0, tag handlers on the JSTL API alone; optional build-time inlining by `ibarra`), `mansart` (Data 1.0, JDBC pool and Transactions). |
+| `vidocq-components/vidocq-components-microprofile/` | `ravel` (Config 3.1), `knock` (Health 4.0), `dirac` (Metrics 5.1), `heisenberg` (Fault Tolerance 4.1), `cervantes` (JWT 2.1), `cyrano` (REST Client 4.0), `humboldt` (Telemetry 2.1), `grimm` (OpenAPI 4.1). |
+| `preview/vidocq-components-jakartaee/vidocq-components-jakartaee-webprofile/` | Usable and released, not complete or not certified: `kerckhoffs` (Security 4.0; see its `PLAN.md` for the open Authentication/Authorization question), `noether` (Persistence 3.2; includes the non-published `noether-validation` test/TCK stopgap). |
+| `incubator/` | Built and tested, never released, not in the BOM (empty for now). |
+| `vidocq-runtime/` | The runtime: orchestrator, extension SPI inspired by Quarkus, the runtime extensions, Maven plugin, CLI, dev mode, BOM, and the MicroProfile 7.2 readiness of the assembled runtime. |
 
-Logical dependency graph: the foundational bricks (`chappe` + `vauban` + `champollion`) have no dependencies between them; `foy`, `cassini` and `mansart` compose them; `noether` provides Persistence with optional Vauban integration and uses Mansart's pool/transactions; `peano` stands alone on the `jakarta.el` API, and `ibarra` composes `foy` + `peano`; `kerckhoffs` depends on the Jakarta Security API (Authentication, Authorization, Servlet, CDI and EL APIs `provided`) and runs on `foy` + `vauban` through its runtime extension; `bodoni` depends only on the JSTL API (Pages, Servlet and EL APIs `provided`), and its runtime extension assembles it with `ibarra` + `peano`; the MicroProfile bricks build on `vauban` (CDI) and, depending on the case, on `cassini` or `chappe`; and `vidocq` orchestrates the whole via an extension SPI inspired by Quarkus and carries the MicroProfile 7.2 readiness of the assembled runtime.
+A component moves to the next maturity level in one commit: its folder moves to the same group path at that level,
+with the grouping POMs, `components.json` and the BOM.
 
-**Multi-repo impact**: before modifying a foundational brick, check its consumers via `dep-graph/graph/inverted.json` (`Vidocq/dep-graph`; the copy in `GestionProjet` is obsolete) — a change in `vauban` ripples through almost the entire workspace. The producer's `pr-validate` builds every transitive consumer against the pull request, one parallel job per consumer (CI architecture: `GestionProjet/README.md`). A change its consumers must follow (a removed or changed API) goes on **one branch name in every repository involved** (companion branches): each consumer is then built on that branch instead of its `main`, and the merges follow the dependency order. Never lift a branch protection to merge around a red consumer. Workflow: `docs/changes-across-repositories.md`.
+**Outside the monorepo, until they move:** `erasmus` (Bean Validation) and `tassis` (Messaging 3.1) go into the
+monorepo's `incubator/`; `verne` (template engine, no specification behind it) goes to the VCU organisation. Each
+keeps its own reactor, `.sdkmanrc`, `mvnw` and `AGENTS.md`, its multi-repo CI (it reads `Vidocq/dep-graph` and the
+workflow templates of `Vidocq/GestionProjet`), and builds against the monorepo's SNAPSHOTs (same GAVs). No module of
+the monorepo depends on them.
+
+**Support repositories:** `vidocq-docs` (Antora docs site, English-only), `pages` (vidocq.dev site), `ci` (shared
+composite actions and reusable workflows), `governance` (CLA, contributor GPG keys, processes), `vidocq-benchmarks`,
+`vidocq-tutorial`; `dep-graph` and `GestionProjet` serve only the three repositories above and are archived once
+they have moved.
+
+**`VidocqCodeUniverse_VCU`** hosts third-party extensions, where third-party dependencies are allowed: `template`,
+`vidocq_vcu_extension_lc4jcdi`, `vidocq_vcu_extension_vaadin`, `vaadin-on-vidocq`. They build against the monorepo's
+SNAPSHOTs. Setup and its open points: `docs/vcu-organisation-setup.md`.
+
+Logical dependency graph: the foundational components (`chappe` + `vauban` + `champollion`) have no dependencies
+between them; `foy`, `cassini` and `mansart` compose them; `noether` provides Persistence with optional Vauban
+integration and uses Mansart's pool/transactions; `peano` stands alone on the `jakarta.el` API, and `ibarra`
+composes `foy` + `peano`; `kerckhoffs` depends on the Jakarta Security API (Authentication, Authorization, Servlet,
+CDI and EL APIs `provided`) and runs on `foy` + `vauban` through its runtime extension; `bodoni` depends only on the
+JSTL API (Pages, Servlet and EL APIs `provided`), and its runtime extension assembles it with `ibarra` + `peano`; the
+MicroProfile components build on `vauban` (CDI) and, depending on the case, on `cassini` or `chappe`; and
+`vidocq-runtime` orchestrates the whole via its extension SPI.
+
+## Changes that cross components or repositories
+
+- **Inside the monorepo, one pull request.** A shared API change fixes every caller in the same pull request: the
+  pull request build (gitflow-incremental-builder) builds and tests every module downstream of what changed, so a
+  change in `vauban` rebuilds almost the whole reactor. There are no companion branches in the monorepo.
+- **A change under `vauban/` goes in its own pull request, with its own test in `vauban/`** reproducing the problem
+  without the module that found it. It must pass the CDI TCK and every stable dependent.
+- **Short-lived branches, small pull requests.** No feature on top of a feature: what another branch needs merges
+  first; incomplete is fine if nothing breaks.
+- **A monorepo change that a repository outside (erasmus, tassis, verne) or a VCU extension must follow**: the
+  monorepo's pull request does not build them. Merge the monorepo first, wait for `main`'s SNAPSHOT, then push the
+  follower's branch again so that it builds against it. erasmus, tassis and verne keep the multi-repo rules
+  (`dep-graph/graph/inverted.json`, companion branches) between themselves until they move.
+- Never lift a branch protection to merge around a red build. Workflow: `docs/changes-across-repositories.md`.
 
 ## Workspace orchestration
 
-This workspace is managed with **mani** (`mani.yaml`): each project is cloned as `<repo>/main/`, with optional sibling worktrees `<repo>/<branch>/` (directory name == branch name). Handy commands: `mani run -a status`, `mani run -a sync-all`, `mani run -a install-hooks` (wires the shared DCO sign-off hooks), `BRANCH=… mani run wt-add -p <repo>`. `mani run`/`mani exec` always need a target (`-a`/`-t`/`-p`). Full guide: `docs/working-with-mani-and-worktrees.md`.
+This workspace is managed with **mani** (`mani.yaml`): each repository is cloned as `<repo>/main/` (the monorepo as
+`vidocq/main/`), with optional sibling worktrees `<repo>/<branch>/` (directory name == branch name), one per task:
+`vidocq/<branch>/` for monorepo work. Handy commands: `mani run -a status`, `mani run -a sync-all`,
+`mani run -a install-hooks` (wires the shared DCO sign-off hooks), `BRANCH=… BASE=origin/main mani run wt-add -p
+vidocq`. `mani run`/`mani exec` always need a target (`-a`/`-t`/`-p`). Full guide:
+`docs/working-with-mani-and-worktrees.md`.
 
 ## Commit and pull request conventions
 
@@ -36,6 +88,8 @@ These rules apply to every repository of the ecosystem.
 - **Work on a branch, open a pull request.** `main` is protected in every repo: it requires signed commits and green `pr-validate` / `governance-checks` checks. Never push to `main`.
 - **Signed and signed-off commits** — `git commit -S -s`: a GPG signature (key registered in `Vidocq/governance`, CLA signed) and a DCO `Signed-off-by` trailer. The shared `.githooks` auto-append and enforce the sign-off.
 - **Conventional Commits, in English**, with the project ticket when there is one (e.g. `fix(core): … (#123)`).
+- **Monorepo pull request titles** — `[WIP]` first while not ready (Forgejo then blocks the merge button), one tag per component touched (`components.json`: `[VAUBAN]`, `[RUNTIME]`, …) plus `[BOM]`, `[TCK]`, `[BUILD]`, `[CI]`, `[DOCS]` where they apply, then the Conventional Commits title: `[WIP] [NOETHER] fix(persistence): flush order on nested transactions (#123)`. Details: the monorepo's `AGENTS.md`.
+- **Monorepo merges are manual**: the maintainer merges; an agent reports a pull request ready and does not arm a merge.
 - **Author and committer: the human alone.** An AI is not an author (Thaler v. Perlmutter, 2026).
 - **AI assistance recorded via `Co-Authored-By:`** naming the tool (e.g. `Co-Authored-By: Claude Opus 4.x <noreply@anthropic.com>`, or the Codex equivalent) on the commits it helped produce. This is an honest **provenance record, not a claim of legal co-authorship**, consistent with the project's "AI-assisted" positioning. Reference rule: `AI-POLICY.md`, which prevails in case of doubt.
 
@@ -73,72 +127,95 @@ Cross-cutting rules that apply to **all** projects, unless an explicitly documen
 
 ## Bug & performance traceability
 
-- **Bugs**: every reproducible bug (internal issue, regression, incorrect behaviour not yet fixed) must be tracked in a `BUG.md` at the root of the relevant project, with: short id, date, symptom, minimal repro, hypothesised cause, status. Updated at each investigation.
-- **Benchmarks**: every performance figure (JMH, wrk, comparison vs Netty/Jetty/Parsson/Yasson/Jackson, etc.) must be recorded in a `BENCH.md` at the root of the project, with: date, hardware/JVM, exact command, raw results, and delta vs the previous run. No performance figure in a README or a commit message without a corresponding entry in `BENCH.md`.
+- **Bugs**: every reproducible bug (internal issue, regression, incorrect behaviour not yet fixed) must be tracked in a `BUG.md` in the folder of the relevant component (monorepo) or at the root of the relevant repository, with: short id, date, symptom, minimal repro, hypothesised cause, status. Updated at each investigation. A bug id is unique across the monorepo and the repositories around it.
+- **Benchmarks**: every performance figure (JMH, wrk, comparison vs Netty/Jetty/Parsson/Yasson/Jackson, etc.) must be recorded in a `BENCH.md` in the folder of the component (or at the root of the repository), with: date, hardware/JVM, exact command, raw results, and delta vs the previous run. No performance figure in a README or a commit message without a corresponding entry in `BENCH.md`.
 
 ## Code quality
 
-SonarQube analyses every Java repository on each push to `main` and each pull request; the tools plugged into the analysis, their settings and the pitfalls met so far are in `QUALITY.md`. The analysis runs in report mode: a red quality gate does not block a merge, but it turns `main`'s gate red. Read the SonarQube comment of a pull request before merging it, and leave no new issue behind.
+SonarQube analyses the monorepo and every Java repository outside it; the tools plugged into the analysis, their
+settings and the pitfalls met so far are in `QUALITY.md`. The monorepo is one SonarQube project, key
+`the-vidocq-project`: `pr-validate` analyses the modules holding a changed file, from its own build, in blocking
+mode (a red gate fails the pull request), and the nightly build analyses `main`. A repository outside the monorepo
+has its own project, key `vidocq-<repository>`, in report mode: a red gate does not block a merge, but it turns
+`main`'s gate red. Read the SonarQube comment of a pull request before merging it, and leave no new issue behind.
 
 **An agent runs the SonarQube analysis on its changes before it pushes them**, and fixes every new issue first.
 This applies to the first push of a pull request and to every later push that changes code. A push sent back by the
 SonarQube comment costs a full CI round, and so does the fix after it. The server accepts branch analyses (community
-branch plugin). From the repository checkout, with a personal token (*My Account → Security*) in `SONAR_TOKEN`:
+branch plugin). From the monorepo checkout, with a personal token (*My Account → Security*) in `SONAR_TOKEN`:
 
 ```bash
-./mvnw -ntp -Pquality verify
-./mvnw -ntp org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar \
+./mvnw -ntp -Pquality verify     # what the branch changed and its dependents, with JaCoCo
+./mvnw -ntp -Pquality -Dgib.disable=true -pl <modules> \
+  org.sonarsource.scanner.maven:sonar-maven-plugin:5.8.0.7211:sonar \
   -Dsonar.host.url=https://sonar.vidocq.dev -Dsonar.token="$SONAR_TOKEN" \
-  -Dsonar.projectKey=vidocq-<repository> -Dsonar.branch.name=<branch> -Dsonar.newCode.referenceBranch=main
+  -Dsonar.projectKey=the-vidocq-project -Dsonar.branch.name=<branch> -Dsonar.newCode.referenceBranch=main
 ```
 
+`<modules>` is what the `sonar-scope` step of the monorepo's `.forgejo/workflows/pr.yml` computes: the modules
+holding a changed file and every aggregator above them up to `.` (the scanner refuses a reactor without them). In a
+repository outside the monorepo, run the same two commands from its checkout without `-Dgib.disable=true -pl …`,
+with `-Dsonar.projectKey=vidocq-<repository>`.
+
 Then read the new issues and the gate of that branch, and fix them before the push:
-`https://sonar.vidocq.dev/project/issues?id=vidocq-<repository>&branch=<branch>&resolved=false&inNewCodePeriod=true`.
+`https://sonar.vidocq.dev/project/issues?id=the-vidocq-project&branch=<branch>&resolved=false&inNewCodePeriod=true`
+(`id=vidocq-<repository>` outside the monorepo).
 The gate also counts duplicated lines in new code (3 % at most): code repeated across sibling classes fails it
 even without an issue.
 
 ## Prerequisites (common to all projects)
 
-- **Java 25** (Temurin) + **Maven 3.9.16** — pinned via `.sdkmanrc` in each project: `cd <repo>/main && sdk env`.
-- All workspace POMs are on `modelVersion 4.0.0` (the workspace moved off the Maven 4 RC to the 3.9.x GA — see the history of this migration in `vidocq-parent`).
+- **Java 25** (Temurin) + **Maven**, pinned via `.sdkmanrc` in each repository (Maven 3.10.0 in the monorepo): `cd vidocq/main && sdk env install`. Always build with the repository's `./mvnw`.
+- All POMs are on `modelVersion 4.0.0` (the workspace moved off the Maven 4 RC to the 3.x GA — see the history of this migration in `vidocq-parent`).
 - For the official Jakarta TCKs: non-public artifacts to install into the local M2 (procedure in the README of the relevant runner).
 
-## Working in a project
+## Working in the monorepo
 
-Always `cd` into the project checkout first (`<repo>/main/` or one of its worktrees). Standard build:
+Always `cd` into the monorepo checkout first (`vidocq/main/` or a worktree `vidocq/<branch>/`) and build from its
+root, with its wrapper:
 
 ```bash
-./mvnw -ntp install -DskipTests   # full build
-./mvnw test                        # unit tests
+./mvnw install                              # what the branch changed and its dependents (gitflow-incremental-builder)
+./mvnw -pl <module path> -am verify         # one module and what it needs
+./mvnw install -Dgib.disable=true           # everything
+./mvnw install -P '!incubator'              # what a release builds
 ```
 
-Specific official-TCK scripts (run from the project checkout root, never from this workspace):
+The incremental build compares with `origin/main`: fetch first. A component depends on another at
+`${project.version}`. **Never install into `~/.m2` from a branch build**: add
+`-Dmaven.repo.local=<scratch>/m2 -Dmaven.repo.local.tail=$HOME/.m2/repository`, or stop at `verify`. A repository
+outside the monorepo builds on its own: `cd <repo>/main && ./mvnw -ntp install`.
 
-- `cassini`: `run-official-tck-restful-4.0.sh [all|-Dtest=…]` — Jakarta REST 4.0 TCK
-- `foy`: `run-official-tck-servlet6.1.sh [--all|-Dtest=…]` — Jakarta Servlet 6.1 TCK
-- `champollion`: `run-official-tck-jsonp-2.1.sh`, `run-official-tck-jsonb-3.0.sh`
-- `tassis`: `run-official-tck-messaging-3.1.sh`
+## TCK runners
 
-## TCK runners — in-reactor behind the `tck` profile
+A pull request runs no TCK. The `TCK nightly` workflow of the monorepo (`.forgejo/workflows/tck-nightly.yml`) runs
+them once a day, on demand (dispatched on a branch, with the component tags, e.g. `CASSINI,FOY`) and for a release:
+a pull request that needs one dispatches it on its branch. What it runs for a component is named in that
+component's root POM (`ci.tck.modules`, each run with `-Ptck`; `ci.tck.command`, run in its folder).
 
-Since the TCK harmonisation (summer 2026, after the 0.2.0 release, following the pattern of the `vidocq-runtime-tck-*` runners of PR vidocq#19), most per-brick runners are back **inside** their brick's reactor, guarded by the **`tck` Maven profile**: a normal `mvn install` neither downloads nor runs anything TCK-related. Activate via the brick's `run-*-tck-*.sh` script (recommended entry point) or `./mvnw -Ptck[,tck-official] -pl <runner> test`.
+Locally, the runners stay behind each component's **`tck` Maven profile**: a normal build neither downloads nor
+runs anything TCK-related. The entry point is the component's script, run from its folder
+(`run-official-tck-*.sh`, e.g. `cassini/run-official-tck-restful-4.0.sh [all|-Dtest=…]`,
+`foy/run-official-tck-servlet6.1.sh [--all|-Dtest=…]`, `champollion/run-official-tck-jsonp-2.1.sh`,
+`vauban/run-tck.sh`), or `./mvnw -Ptck[,tck-official] -pl <runner path> test` from the root.
 
-- **In-reactor under `-Ptck`**: `cassini-tck`, `foy-tck`, `champollion-tck`, `cervantes-tck`, `cyrano-tck`, `dirac-tck`, `heisenberg-tck`, `humboldt-tck`, `knock-tck`, `ravel-tck`, `erasmus-tck`, and the new `peano-tck` / `ibarra-tck` (in-reactor from day one). `vauban-tck-runner` + `vauban-atinject-tck-runner` are in the vauban reactor too.
-- **Still out-of-reactor** (standalone `modelVersion 4.0.0` POM, without `<parent>`): `grimm-tck`, `mansart-data-tck`, `mansart-transactions-tck`, `champollion-protobuf-tck`, and the `vidocq-servlet-chappe-tck-runner` runner.
-- **At the v0.2.0 tag**, every runner was still out-of-reactor — the Antora docs of the 0.2.0 line reflect that state; do not "fix" those pages towards the in-reactor state.
+- **In-reactor under `-Ptck`**: `vauban-tck-runner`, `vauban-atinject-tck-runner`, `cassini-tck`, `champollion-tck`, `foy-tck`, `peano-tck`, `ibarra-tck`, `bodoni-tck`, `ravel-tck`, `knock-tck`, `dirac-tck`, `heisenberg-tck`, `cervantes-tck`, `cyrano-tck`, `humboldt-tck`, `kerckhoffs-tck`.
+- **Standalone POMs** (no `<parent>`), run with `-f` by their component's `ci.tck.command` or script: `grimm-tck`, `mansart-data-tck`, `mansart-transactions-tck`, `champollion-protobuf-tck`, `noether-jpa-tck`, `noether-validation-tck`. Check the component's `pom.xml` before asserting either state.
+- **Runtime runners**: `vidocq-runtime/vidocq-runtime-integration-tests/vidocq-runtime-tck-*` certify **the assembled runtime** (not the isolated components), behind `tck` too: `./mvnw -Ptck -pl vidocq-runtime/vidocq-runtime-integration-tests/<module> test`. The per-component runners remain authoritative for each implementation.
+- **History**: at the v0.2.0 tag every runner was out of its reactor (ShrinkWrap Maven Resolver could not parse `modelVersion 4.1.0`); the Antora docs of the 0.2.0 line reflect that state: do not "fix" those pages.
 
-**History**: the initial constraint was ShrinkWrap Maven Resolver 3.3 (transitive of the official TCK) which did not parse the workspace's pre-migration `modelVersion 4.1.0`; it disappeared with Maven 3.9.16 + Model 4.0.0. The remaining separation (grimm / mansart / protobuf) keeps the runtime release cycle decoupled from the official TCK — check the `pom.xml` of the relevant reactor before asserting either state for a brick.
+erasmus and tassis keep their own TCK scripts (`erasmus-tck` in-reactor; `tassis/run-official-tck-messaging-3.1.sh`).
 
-**Runtime MicroProfile runners (PR vidocq#19, MicroProfile 7.2 ready)**: the `vidocq` repo embeds 8 MicroProfile TCK runners in `vidocq-runtime-integration-tests/vidocq-runtime-tck-*`, which certify **the assembled runtime** (not the isolated bricks). They are guarded behind the `tck` profile too: activate via `./mvnw -Ptck -pl vidocq-runtime-integration-tests/<module> test`. The per-brick runners listed above remain authoritative for each implementation.
+## Per-component guides
 
-## Per-project guides
+Read the targeted component's `AGENTS.md` and `README.md` before modifying its code — each documents its own
+conventions, modules and roadmap. In the monorepo they sit in the component's folder (`<component path>/AGENTS.md`,
+paths in `components.json`); outside it, at the repository root.
 
-Read the targeted project's `AGENTS.md` (or `CLAUDE.md`) and `README.md` before modifying its code — each documents its own conventions, modules, and roadmap (milestones, TDD constraints, zero-dependency principles, etc.):
-
-- **`<repo>/AGENTS.md`** — conventions specific to the brick. It takes precedence over this file in case of local divergence.
-- **`<repo>/README.md`** — product view and detailed architecture.
-- **`<repo>/ROADMAP.md`** or **`PLAN.md`** — milestones and remaining work (`PLAN.md` is the design of record for bricks still in design, e.g. peano, ibarra, bodoni, kerckhoffs). There is no unified roadmap: each brick carries its own, with `vidocq/ROADMAP.md` acting as the entry point for the assembled runtime.
-- **`<repo>/BUG.md` and `BENCH.md`** — traceability (see above). Bug ids cross project boundaries when the cause lies upstream.
-- **`<repo>/tasks/todo.md` and `tasks/lessons.md`** — current work plan and numbered lessons, to be re-read when opening a session.
+- **`AGENTS.md`** — conventions specific to the component. It takes precedence over this file in case of local divergence.
+- **`README.md`** — product view and detailed architecture.
+- **`ROADMAP.md`** or **`PLAN.md`** — milestones and remaining work (`PLAN.md` is the design of record for components still in design, e.g. kerckhoffs, bodoni). There is no unified roadmap: each component carries its own, with `vidocq-runtime/ROADMAP.md` acting as the entry point for the assembled runtime.
+- **`BUG.md` and `BENCH.md`** — traceability (see above). Bug ids cross component boundaries when the cause lies upstream.
+- **`tasks/todo.md` and `tasks/lessons.md`**, where a component has them — current work plan and numbered lessons, to be re-read when opening a session.
 
 At workspace level, `WORK_WITH_CLAUDE.md` complements this file: it describes **how the maintainer works** (Study/Execution registers, the "…right?" hypothesis pattern, requirement of proof before assertion) where this file describes the **technical conventions**. It applies to any agent, not only Claude.

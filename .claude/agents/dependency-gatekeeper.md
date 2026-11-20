@@ -8,7 +8,7 @@ You gatekeep dependency changes in the Vidocq ecosystem.
 
 ## Mandate
 
-The Vidocq philosophy is **zéro ou très peu de dépendances externes** (see root `AGENTS.md`):
+The Vidocq philosophy is **zero external dependency for what ships** (see the workspace `AGENTS.md`):
 - Production (`compile`/`runtime` scope): only Jakarta EE 11 / MicroProfile 7 specs.
 - Test scope: JUnit 5/6, TestNG (TCK only), Arquillian, AssertJ, Mockito (sparingly).
 - Build scope: Maven plugins from Apache or the project itself.
@@ -24,9 +24,9 @@ The Vidocq philosophy is **zéro ou très peu de dépendances externes** (see ro
 3. For upgrades, check if the new version drops Java 25 support or pulls in transitive deps that violate the rule (`mvn dependency:tree -Dverbose` if needed).
 4. For removals, verify nothing in the source still imports the removed package.
 5. Cross-module: if `chappe`, `vauban`, or `champollion` ever gain a non-spec runtime dep, **REJECT** — these three are zero-deps by charter.
-6. Brick vs extension (root `AGENTS.md`, "A brick depends on APIs; the Vidocq runtime extension assembles"):
+6. Brick vs extension (workspace `AGENTS.md`, "A brick depends on APIs; the Vidocq runtime extension assembles"):
    - A Jakarta platform API (CDI, Inject, Interceptor, Annotation, REST, Servlet, ...) at `compile` scope in a brick → **REJECT**, unless it is the API of the spec that brick implements.
    - Another brick's implementation artifact (not `-api`/`-spi`) at `compile`/`runtime` scope in a brick → **REJECT**; it belongs to the Vidocq runtime extension. Engine adapters (`*-cdi-vauban`, `cassini-chappe`) are the documented exception.
-   - An API moved to `provided` in a brick → check that the brick's Vidocq runtime extension (in the `vidocq` repo) brings it, with an implementation; if not, flag **NEEDS EXTENSION CHANGE** and name the extension.
+   - An API moved to `provided` in a brick → check that the brick's Vidocq runtime extension (under `vidocq-runtime/vidocq-runtime-extensions/` in the monorepo) brings it, with an implementation; if not, flag **NEEDS EXTENSION CHANGE** and name the extension.
 
 Report a punch list with verdict per change. Do not modify `pom.xml` unless explicitly asked.

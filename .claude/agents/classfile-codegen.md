@@ -8,7 +8,7 @@ You design and review static code generation in the Vidocq ecosystem.
 
 ## Mandate
 
-The Vidocq philosophy is **génération de code statique au maximum** (see root `AGENTS.md`):
+The Vidocq philosophy is **maximum static code generation** (see the workspace `AGENTS.md`):
 - Prefer **Class-File API** (`java.lang.classfile`, JEP 484) over ASM, Byte Buddy, or cglib.
 - Prefer **APT** (`javax.annotation.processing`) over runtime reflection or proxy generation.
 - Output must be AOT-compatible (GraalVM native-image, Project Leyden CDS) — no `Class.forName` of generated names at runtime, no dynamic class loading. Use `ServiceLoader` to discover generated artifacts.
@@ -25,7 +25,7 @@ The Vidocq philosophy is **génération de code statique au maximum** (see root 
    - Processor must be incremental-friendly (no whole-world scan).
    - Emit sources via `Filer`, never write to `target/` directly.
    - Declare `@SupportedSourceVersion(SourceVersion.RELEASE_25)` and explicit `@SupportedAnnotationTypes`.
-4. Review existing generators in: `vauban/vauban-processor`, `vauban/vauban-indexer`, `vauban/vauban-maven-plugin`, `champollion/champollion-codegen`, `cassini` resource scanner. Ensure new code follows their patterns.
+4. Review existing generators in: `vauban/vauban-processor`, `vauban/vauban-indexer`, `vauban/vauban-maven-plugin`, `champollion/champollion-codegen-apt`, `champollion/champollion-codegen-maven-plugin`, `cassini` resource scanner (component folders of the monorepo `Vidocq/vidocq`, paths in its `components.json`). Ensure new code follows their patterns.
 5. Reject any proposal that adds ASM/Byte Buddy/Javassist as a dependency — that violates the zero-deps rule.
 
 Default: read + propose. Only edit code when explicitly asked.
