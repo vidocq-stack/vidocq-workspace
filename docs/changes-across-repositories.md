@@ -1,133 +1,42 @@
 # Changes across repositories
 
-Some changes cannot land in one repository: a brick changes an API, and its consumers must
-follow in the same move. Vauban removing its default `java:comp/env/jdbc/<name>` rule while the
-Vidocq naming extension still relied on it is one (vauban#179 and vidocq#303). This guide is the
-maintainer workflow for such a change. It needs push access to the Vidocq repositories: a
-contributor working from a fork opens the producer pull request alone, and a maintainer takes
-the consumer side over.
+Since 2026-11-20 the components, their parent and the runtime live in one repository, the monorepo
+`Vidocq/vidocq`. Most changes that used to span several repositories are now one pull request. This guide covers
+that case and the few repositories still around the monorepo.
 
-## Why the producer's pull request rebuilds its consumers
+## Inside the monorepo: one pull request
 
-The `pr-validate` check of a brick does not stop at the brick. Its `impacted` job
-([`Vidocq/ci/resolve-impacted`](https://codefloe.com/Vidocq/ci/src/branch/main/resolve-impacted))
-reads the dependency graph of [`Vidocq/dep-graph`](https://codefloe.com/Vidocq/dep-graph) and
-lists every transitive consumer. The `downstream` jobs then build them in parallel, one job per
-consumer
-([`Vidocq/ci/build-one-consumer`](https://codefloe.com/Vidocq/ci/src/branch/main/build-one-consumer)):
-each job rebuilds the producer at the pull request's version, then builds the consumer against
-it and runs its unit and integration tests. Only the producer's version is pinned in the
-consumer; its other Vidocq upstreams come from `central-snapshots` as published. A brick whose
-change breaks a consumer does not get a green check. (How the whole check works:
-[`GestionProjet/README.md`](https://codefloe.com/Vidocq/GestionProjet/src/branch/main/README.md).)
+- **A shared API change fixes every caller in the same pull request.** The pull request build
+  (gitflow-incremental-builder, `.forgejo/workflows/pr.yml`) builds the modules the change touches and tests every
+  module downstream of them: a change that breaks a caller does not get a green check.
+- **A change under `vauban/` goes in its own pull request**, with its own test in `vauban/` reproducing the problem
+  without the module that found it.
+- **No feature on top of a feature**: what another branch needs merges first.
+- There are no companion branches in the monorepo. The maintainer merges, by hand.
 
-By default each consumer is built from its `main`. For a change that breaks the consumer on
-purpose, that check can never pass: the consumer's `main` is the code that still uses the old
-API, and the consumer's fix cannot be merged first, since it needs the new API.
+## Repositories outside the monorepo
 
-## Companion branches
+`erasmus` and `tassis` (until they move into the monorepo's `incubator/`), `verne` (until it moves to VCU) and the
+extensions of the `VidocqCodeUniverse_VCU` organisation build against the monorepo's SNAPSHOTs, with the same GAVs
+as before. The monorepo's pull request does not build them, so a monorepo change they must follow goes in two
+steps:
 
-Give the consumer's change **the same branch name** as the producer's. Its `downstream` job then
-builds that consumer from that branch, the *companion branch*, instead of from its `main`:
-
-| Pull request of the producer | Consumer with a branch of that name | Consumer without one |
-|---|---|---|
-| from a branch of the producer repository | built on the companion branch | built on `main` |
-| from a fork | built on `main` | built on `main` |
-| none (the nightly chain on `main`) | built on `main` | built on `main` |
-
-- The name matches as a whole: `feat/naming` does not pick `other/feat/naming`.
-- A fork never picks a companion branch, so a fork cannot choose the code that is built and
-  tested next to its change.
-- The log of each job names the branch of the consumer, and a notice lists the repositories
-  built on a companion branch.
-- A consumer built on a companion branch always runs all its tests: the targeted test selection
-  falls back to the full run.
-- If the forge cannot be asked whether a consumer has the branch, the step fails rather than
-  falling back on `main` and testing the wrong code.
-- A repository that never wants them sets `companion-branches: 'false'` on the step.
-
-## The workflow
-
-1. **Create the branch in every repository involved, with one name.** From the workspace root:
-
-   ```bash
-   BRANCH=feat/naming-bindings mani run wt-add -p vauban,vidocq
-   ```
-
-   Repositories with flat worktrees (`vidocq-docs`) flatten the directory name, not the
-   branch name, so they take part as well.
-
-2. **Push the consumer's branch before the producer's last push**, or at least before its
-   checks run. Each `downstream` job looks for the companion branch when it runs: a branch
-   pushed afterwards is not seen until the producer's checks run again.
-
-3. **Open both pull requests and link them** in their descriptions ("needs vauban#179",
-   "vidocq#303 follows"). Until the producer is merged, the consumer's own pull request is red:
-   its build resolves the producer's published snapshot, which still has the old API. This is
+1. **Open both pull requests and link them** in their descriptions ("needs vidocq#123"). Giving the follower's
+   branch the same name as the monorepo's keeps the pair easy to find. Until the monorepo change is merged, the
+   follower's pull request is red: its build resolves the published SNAPSHOT, which still has the old API. This is
    expected.
+2. **Merge the monorepo first**, then wait for its `main` build to publish the SNAPSHOT (to `maven.vidocq.dev`;
+   read the commit in the published build-info before relying on it). Push the follower's branch again (a rebase
+   on its `main`), so that its checks run against the new SNAPSHOT, and merge it as soon as they are green.
 
-4. **Merge the producer first.** Its green `pr-validate` is the proof that the pair works.
-   Read its SonarQube comment, then post `/merge`.
+Between the two merges the follower's `main` does not build against the new SNAPSHOT: keep that window short, and
+keep an API change additive across it where you can (add a method or a type rather than change a signature or a
+record's components).
 
-5. **Wait for the producer's `main` build to publish its snapshot**, then push the consumer's
-   branch again (a rebase on its `main` is the usual way), so that its checks run against the
-   new snapshot.
+erasmus, tassis and verne keep their multi-repo CI until they move: their `pr-validate` reads
+[`Vidocq/dep-graph`](https://codefloe.com/Vidocq/dep-graph) and the workflow templates of
+[`Vidocq/GestionProjet`](https://codefloe.com/Vidocq/GestionProjet), and the companion-branch rule of that CI
+(a consumer built on the branch of the same name as its producer's) still applies between them. None of them
+depends on another today, so it rarely matters.
 
-6. **Merge the consumer as soon as its checks are green.** Between steps 4 and 6 the consumer's
-   `main` does not build against the producer's snapshot: keep that window short, and do not
-   start another change on that consumer in between.
-
-A chain works the same way: when a consumer of the consumer also has the branch, its
-`downstream` job builds it on that branch, after rebuilding first, in the same job and without
-their tests, the intermediate upstreams that have the branch too (a mini-chain), each pinned in
-the consumer. An intermediate upstream without the branch is never rebuilt: it comes from
-`central-snapshots` as published. The merges follow the dependency order.
-
-## Two producers on one branch
-
-A companion branch can deadlock when it spans **two repositories that both feed the same
-consumer, and neither sits between the other and that consumer**. Vauban's bug stack of
-2026-11-18 (vauban#337) hit it:
-
-- Kerckhoffs and Cassini both depend on Vauban, and Vidocq depends on both. All three had the
-  branch `fix/vauban-bug-stack`.
-- cassini#151's `downstream` job built Vidocq on the branch. Kerckhoffs is not between Cassini
-  and Vidocq, so that job took Kerckhoffs from its published `main`, which lacked a fix the Vidocq
-  branch relied on: a test returned 401 instead of 200.
-- kerckhoffs#34's `downstream` job built the same Vidocq branch. Cassini is not between Kerckhoffs
-  and Vidocq, so it took Cassini from its published `main`, which lacked a class the Vidocq branch
-  used: the job did not compile.
-- Neither pull request could turn green first, so neither could merge.
-
-Before you push a companion branch that spans more than one producer of a consumer, list what
-each consumer commit needs from each upstream, then:
-
-- **Put the consumer commits that need only one producer on a second branch name** shared with
-  that producer, and merge that branch first. The deadlock above was broken with
-  `fix/vauban-336-followup` (kerckhoffs#35 and vidocq#658), merged before the rest.
-- **Prove the split offline** before pushing it: build the consumer on a private Maven repository
-  with each upstream at `origin/main`, except the one producer on the branch. That is how the
-  `downstream` job resolves them.
-- **Keep an API change additive across the window.** Adding a component to a public record keeps
-  binary compatibility, but every record pattern that deconstructs it stops compiling: the
-  consumer's `main` breaks the moment the producer merges. Add a method or a new type instead, or
-  ship the consumer's fix on the branch merged first.
-
-Each merge in the chain then waits for the previous one's snapshot (step 5 above), and each
-`main` in between may not build against the new snapshots until its own companion merges. Merge
-the chain without starting other work on those repositories.
-
-## What a companion branch does not cover
-
-- **New dependencies.** The consumers come from the dependency graph of each repository's
-  `main`. A companion branch that starts depending on the producer is not found by the graph,
-  so it is not built.
-- **Later pushes on the consumer.** The producer's check tested the companion branch as it was
-  when the check ran. Push the producer again, or re-run its checks, after a change on the
-  consumer's branch that matters to the pair.
-- **Fork pull requests.** A contributor's cross-repository change is taken over by a maintainer,
-  who pushes the branches to the Vidocq repositories.
-
-Never lift a branch protection to merge a producer whose consumers fail: that leaves the
-consumers' `main` red until someone notices. Push a companion branch instead.
+Never lift a branch protection to merge around a red build: that leaves a `main` red until someone notices.

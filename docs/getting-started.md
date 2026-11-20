@@ -3,8 +3,13 @@
 From a fresh machine to your first pull request on Vidocq, step by step, on macOS, Linux and
 Windows.
 
+The code of Vidocq lives in one repository, the monorepo
+[`Vidocq/vidocq`](https://codefloe.com/Vidocq/vidocq): every component, their parent POM and the runtime. The
+workspace gathers it with the repositories around it (documentation, site, CI, governance, `erasmus`, `tassis`,
+`verne`, the VCU extensions).
+
 Everyone starts as a **contributor**: you propose changes from your own fork of a Vidocq
-repository. After a period of contributions, the maintainers may invite you to become a
+repository, most often the monorepo. After a period of contributions, the maintainers may invite you to become a
 **maintainer**; you then follow the
 [maintainer guide](https://codefloe.com/Vidocq/governance/src/branch/main/MAINTAINERS.md) of the
 governance repository. Steps 1 to 6 are the same for both; step 7 is for contributors.
@@ -21,7 +26,7 @@ The examples use a fictional contributor: **Jane Doe**, Codefloe username **`jan
 3. [Install the tools](#3-install-the-tools)
 4. [Clone the workspace](#4-clone-the-workspace)
 5. [Configure Maven for the Vidocq snapshots](#5-configure-maven-for-the-vidocq-snapshots)
-6. [Build a first repository](#6-build-a-first-repository)
+6. [Build the monorepo](#6-build-the-monorepo)
 7. [Your first contribution, from a fork](#7-your-first-contribution-from-a-fork)
 8. [Working with a coding agent](#8-working-with-a-coding-agent)
 9. [Troubleshooting](#9-troubleshooting)
@@ -70,7 +75,7 @@ fail until your signature is merged.
 | [mani](https://manicli.com) | clones and drives all the repositories of the workspace | any recent version |
 
 You do not need to install Maven: each repository ships a Maven wrapper (`./mvnw`) that downloads
-the right version, 3.9.16, on first use.
+the version it pins on first use (3.10.0 in the monorepo).
 
 ### macOS
 
@@ -138,9 +143,9 @@ repositories, ignored by the workspace repository:
 ```text
 vidocq-workspace/
 ├── AGENTS.md  CLAUDE.md  README.md  mani.yaml  .githooks/  docs/
-├── chappe/
-│   └── main/          ← clone of Vidocq/chappe, on branch main
-├── vauban/
+├── vidocq/
+│   └── main/          ← clone of Vidocq/vidocq (the monorepo), on branch main
+├── vidocq-docs/
 │   └── main/
 └── ...
 ```
@@ -159,10 +164,13 @@ The mani commands, the worktrees and the IntelliJ setup are described in
 
 ## 5. Configure Maven for the Vidocq snapshots
 
-Between two releases, the repositories depend on each other in `-SNAPSHOT` versions, and the
-parent of every repository, `io.vidocq:vidocq-parent`, is a SNAPSHOT too. The CI publishes them
-on every push to `main`, in the Maven Central snapshot repository. Maven does not search that
-repository by default: declare it in `~/.m2/settings.xml`, as the CI does.
+Between two releases, the monorepo's modules, its parent `io.vidocq:vidocq-parent` included, are
+`-SNAPSHOT` versions. The CI publishes them on every push to `main` to the Vidocq snapshot
+repository, `maven.vidocq.dev` (a copy is kept at `maven.bak.vidocq.dev`), and copies them to the
+Maven Central snapshot repository every night. A branch build of the monorepo resolves there the
+modules it does not rebuild, and `erasmus`, `tassis`, `verne` and the VCU extensions resolve their
+parent and the components there. Maven does not search those repositories by default: declare
+them in `~/.m2/settings.xml`, as the CI does.
 
 If you have no `~/.m2/settings.xml` yet, create it with this content. If you already have one,
 add the `<profile>` to its `<profiles>` and the `<activeProfile>` to its `<activeProfiles>`.
@@ -175,6 +183,18 @@ add the `<profile>` to its `<profiles>` and the `<activeProfile>` to its `<activ
       <id>vidocq-snapshots</id>
       <repositories>
         <repository>
+          <id>vidocq-snapshots</id>
+          <url>https://maven.vidocq.dev/snapshots</url>
+          <releases><enabled>false</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+        <repository>
+          <id>vidocq-snapshots-bak</id>
+          <url>https://maven.bak.vidocq.dev/snapshots</url>
+          <releases><enabled>false</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </repository>
+        <repository>
           <id>central-snapshots</id>
           <url>https://central.sonatype.com/repository/maven-snapshots/</url>
           <releases><enabled>false</enabled></releases>
@@ -182,6 +202,12 @@ add the `<profile>` to its `<profiles>` and the `<activeProfile>` to its `<activ
         </repository>
       </repositories>
       <pluginRepositories>
+        <pluginRepository>
+          <id>vidocq-snapshots</id>
+          <url>https://maven.vidocq.dev/snapshots</url>
+          <releases><enabled>false</enabled></releases>
+          <snapshots><enabled>true</enabled></snapshots>
+        </pluginRepository>
         <pluginRepository>
           <id>central-snapshots</id>
           <url>https://central.sonatype.com/repository/maven-snapshots/</url>
@@ -197,36 +223,56 @@ add the `<profile>` to its `<profiles>` and the `<activeProfile>` to its `<activ
 </settings>
 ```
 
-The repository is public: no credentials are needed. Without it, the first build stops with
-`Non-resolvable parent POM ... io.vidocq:vidocq-parent:pom:...-SNAPSHOT`.
+These repositories are public: no credentials are needed. Without them, a build outside the
+monorepo stops with `Non-resolvable parent POM ... io.vidocq:vidocq-parent:pom:...-SNAPSHOT`.
 
 ---
 
-## 6. Build a first repository
+## 6. Build the monorepo
 
-Chappe, the HTTP server, depends on no other Vidocq repository: it is a good first build.
+The monorepo is one Maven build, from its root, with its wrapper. There is no root POM in the
+workspace itself.
 
 ```bash
-cd ~/vidocq-workspace/chappe/main
-./mvnw -ntp clean install
+cd ~/vidocq-workspace/vidocq/main
+./mvnw -ntp clean install -DskipTests      # everything, without the tests: the quickest first build
 ```
 
 The build ends with `BUILD SUCCESS`. The first run is slower: Maven downloads itself and the
-dependencies.
-
-Each repository is an independent Maven build: there is no root POM in the workspace. Always
-`cd` into the repository you work on, and always build with `clean install`: a stale `target/`
-directory can hide a failure or invent one. Each repository's `README.md` and `AGENTS.md`
-describe its modules, its TCK scripts and its own rules.
-
-**Changing two repositories together.** To try a change of Chappe in Foy before both are
-merged, install Chappe locally, then build Foy with `-nsu` (no snapshot updates), so that Maven
-uses your local Chappe instead of a newer one from the snapshot repository:
+dependencies. On `main` the build covers the whole reactor. On any other branch the
+[gitflow-incremental-builder](https://github.com/gitflow-incremental-builder/gitflow-incremental-builder)
+extension builds only the modules your branch changed (compared with `origin/main`: fetch first)
+and the modules that depend on them, with their tests:
 
 ```bash
-cd ~/vidocq-workspace/chappe/main && ./mvnw -ntp clean install
-cd ~/vidocq-workspace/foy/main && ./mvnw -ntp -nsu clean install
+./mvnw -ntp clean verify                                                      # what the branch changed, and its dependents
+./mvnw -ntp -pl vidocq-components/vidocq-components-transport/chappe/chappe-core -am verify   # one module and what it needs
+./mvnw -ntp clean verify -Dgib.disable=true                                   # everything
 ```
+
+Build with `clean`: a stale `target/` directory can hide a failure or invent one. The monorepo's
+`README.md` and `AGENTS.md` describe its layout; each component folder (its path is in
+`components.json`) has its own `README.md`, `AGENTS.md` and TCK scripts.
+
+**Changing two components together** is one branch and one build: the incremental build rebuilds
+and tests every module that depends on what you changed.
+
+**Trying a monorepo change in `erasmus`, `tassis` or `verne`** before it is merged: install the
+monorepo into a private local repository, then build the other repository against it with `-nsu`
+(no snapshot updates), so that Maven uses your build instead of a published SNAPSHOT. Keep your
+own `~/.m2` out of it: a branch installed there would shadow the published SNAPSHOTs for
+everything you build next.
+
+```bash
+cd ~/vidocq-workspace/vidocq/<branch>
+./mvnw -ntp clean install -DskipTests -Dgib.disable=true \
+  -Dmaven.repo.local=$HOME/m2-try -Dmaven.repo.local.tail=$HOME/.m2/repository
+cd ~/vidocq-workspace/erasmus/main
+./mvnw -ntp -nsu clean install \
+  -Dmaven.repo.local=$HOME/m2-try -Dmaven.repo.local.tail=$HOME/.m2/repository
+```
+
+`maven.repo.local.tail` needs Maven 3.9 or later; every Vidocq wrapper pins one.
 
 ---
 
@@ -235,15 +281,16 @@ cd ~/vidocq-workspace/foy/main && ./mvnw -ntp -nsu clean install
 Contributors push to their own fork; maintainers skip the fork and push to the Vidocq repository,
 as described in the
 [maintainer guide](https://codefloe.com/Vidocq/governance/src/branch/main/MAINTAINERS.md).
-The example fixes issue #42 of Chappe.
+The example fixes issue #42 of the monorepo, in Chappe, the HTTP server
+(`vidocq-components/vidocq-components-transport/chappe`).
 
-1. **Fork the repository.** On [Vidocq/chappe](https://codefloe.com/Vidocq/chappe), click
-   **Fork**, then **Fork repository**: you get `janedoe/chappe`.
+1. **Fork the repository.** On [Vidocq/vidocq](https://codefloe.com/Vidocq/vidocq), click
+   **Fork**, then **Fork repository**: you get `janedoe/vidocq`.
 2. **Add your fork as a remote**, next to `origin` (the Vidocq repository, read-only for you):
 
    ```bash
-   cd ~/vidocq-workspace/chappe/main
-   git remote add fork git@codefloe.com:janedoe/chappe.git
+   cd ~/vidocq-workspace/vidocq/main
+   git remote add fork git@codefloe.com:janedoe/vidocq.git
    ```
 
 3. **Create a branch from the latest `main`**, in a worktree next to `main/` (the directory has
@@ -251,14 +298,15 @@ The example fixes issue #42 of Chappe.
 
    ```bash
    git fetch origin
-   BRANCH=fix/42-header-without-colon BASE=origin/main mani run wt-add -p chappe
+   BRANCH=fix/42-header-without-colon BASE=origin/main mani run wt-add -p vidocq
    cd ../fix/42-header-without-colon
    ```
 
-4. **Write the test first**, make it pass, then clean up. Prove it:
+4. **Write the test first**, make it pass, then clean up. Prove it: the incremental build
+   rebuilds Chappe and tests every module that depends on it.
 
    ```bash
-   ./mvnw -ntp clean install
+   ./mvnw -ntp clean verify
    ```
 
 5. **Commit.** Git signs the commit and the hook adds the `Signed-off-by:` line:
@@ -275,11 +323,15 @@ The example fixes issue #42 of Chappe.
    git push -u fork fix/42-header-without-colon
    ```
 
-   On `https://codefloe.com/janedoe/chappe`, click **New pull request**, check that it goes
-   **into** `Vidocq/chappe` `main` **from** `janedoe/chappe` `fix/42-header-without-colon`, and
-   describe what the change does and why.
-7. **Follow the checks and the review.** The checks verify your CLA, your signatures and the
-   build of Chappe and of every repository that depends on it. They start once a maintainer has
+   On `https://codefloe.com/janedoe/vidocq`, click **New pull request**, check that it goes
+   **into** `Vidocq/vidocq` `main` **from** `janedoe/vidocq` `fix/42-header-without-colon`, and
+   describe what the change does and why. The title starts with the tag of each component you
+   touch (listed in the monorepo's `components.json`), then the commit-style title:
+   `[CHAPPE] fix(http): reject a header line without a colon (#42)`. Put `[WIP]` first while it
+   is not ready for review.
+7. **Follow the checks and the review.** The checks verify your CLA, your signatures, the title,
+   and the build and tests of Chappe and of every module that depends on it. No TCK runs on a
+   pull request. They start once a maintainer has
    approved them: Codefloe holds the workflows of a pull request from a fork until then. If
    `main` moves on, rebase and push again; never use the **Update branch** button, it breaks the
    signatures:
@@ -302,7 +354,7 @@ The details, with how to fix each failing check, are in the
 Open your coding agent at the root of the workspace. Codex reads `AGENTS.md` directly; Claude
 Code reads `CLAUDE.md`, which imports `AGENTS.md`, and also gets the shared agents and skills of
 `.claude/`. Each repository carries its own `AGENTS.md` too, for an agent started inside
-`<repo>/main/`.
+`<repo>/main/`; in the monorepo, so does each component folder.
 
 Your personal Claude Code settings go in `.claude/settings.local.json`, which git ignores. If an
 agent helped you write a commit, record it with a `Co-Authored-By:` trailer that names the tool;
